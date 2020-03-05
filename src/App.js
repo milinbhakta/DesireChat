@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import UsernameForm from "./components/UsernameForm";
-import PersistentDrawerLeft from "./components/PersistentDrawerLeft";
+import ChatScreen from "./ChatScreen";
+
 
 class App extends Component {
   constructor() {
@@ -34,7 +35,7 @@ class App extends Component {
       return <UsernameForm onSubmit={this.onUsernameSubmitted} />;
     }
     if (this.state.currentScreen === "ChatScreen") {
-      return <PersistentDrawerLeft currentUsername={this.state.currentUsername} />;
+      return <ChatScreen currentUsername={this.state.currentUsername} />;
     }
   }
 }
