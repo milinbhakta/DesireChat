@@ -4,8 +4,18 @@ import MessageList from "./components/MessageList";
 import SendMessageForm from "./components/SendMessageForm";
 import TypingIndicator from "./components/TypingIndicator";
 import WhosOnlineList from "./components/WhosOnlineList";
-import { Grid } from "@material-ui/core";
+import {
+  Grid,
+  AppBar,
+  Toolbar,
+  Typography,
+  Menu,
+  MenuItem,
+  IconButton,
+  makeStyles
+} from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
+import AccountCircle from "@material-ui/icons/AccountCircle";
 
 class ChatScreen extends Component {
   constructor(props) {
@@ -160,6 +170,7 @@ class ChatScreen extends Component {
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
+        <MenuAppBar />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
@@ -193,6 +204,63 @@ class ChatScreen extends Component {
       </div>
     );
   }
+}
+
+function MenuAppBar() {
+  const useStyles = makeStyles(theme => ({
+    root: {
+      flexGrow: 1
+    },
+    menuButton: {
+      marginRight: theme.spacing(2)
+    },
+    title: {
+      flexGrow: 1
+    }
+  }));
+  const classes = useStyles();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = event => {
+    console.log(event.target.innerText);
+    setAnchorEl(null);
+  };
+
+  return (
+    <div className={classes.root}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" className={classes.title}>
+            Photos
+          </Typography>
+          <IconButton
+            aria-label="account of current user"
+            aria-controls="menu-appbar"
+            aria-haspopup="true"
+            onClick={handleClick}
+            color="inherit"
+          >
+            <AccountCircle />
+          </IconButton>
+          <Menu
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleClose}>Create Room</MenuItem>
+            <MenuItem onClick={handleClose}>Join Room</MenuItem>
+            <MenuItem onClick={handleClose}>Logout</MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+    </div>
+  );
 }
 
 export default ChatScreen;
