@@ -12,10 +12,17 @@ import {
   Menu,
   MenuItem,
   IconButton,
-  makeStyles
+  makeStyles,
+  Button,
+  TextField
 } from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
 
 class ChatScreen extends Component {
   constructor(props) {
@@ -170,7 +177,7 @@ class ChatScreen extends Component {
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
-        <MenuAppBar />
+        <MenuAppBar onSubmit={this.createRoom} />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
@@ -206,7 +213,7 @@ class ChatScreen extends Component {
   }
 }
 
-function MenuAppBar() {
+function MenuAppBar(props) {
   const useStyles = makeStyles(theme => ({
     root: {
       flexGrow: 1
@@ -226,8 +233,30 @@ function MenuAppBar() {
   };
 
   const handleClose = event => {
-    console.log(event.target.innerText);
     setAnchorEl(null);
+  };
+
+  const [open, setOpen] = React.useState(false);
+  const [roomname, setroomname] = React.useState("");
+
+  const handleClickOpen = event => {
+    setOpen(true);
+    handleClose(event);
+  };
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+  };
+
+  const onChangeCreateRoomText = e => {
+    setroomname(e.target.value);
+  };
+
+  const onSubmitRoom = e => {
+    e.preventDefault();
+    props.onSubmit(roomname);
+    setroomname('');
+    handleCloseDialog();
   };
 
   return (
@@ -253,10 +282,43 @@ function MenuAppBar() {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose}>Create Room</MenuItem>
+            <MenuItem onClick={handleClickOpen}>Create Room</MenuItem>
             <MenuItem onClick={handleClose}>Join Room</MenuItem>
             <MenuItem onClick={handleClose}>Logout</MenuItem>
           </Menu>
+          <Dialog
+            open={open}
+            onClose={handleCloseDialog}
+            aria-labelledby="form-dialog-title"
+          >
+            <form onSubmit={onSubmitRoom}>
+              <DialogTitle id="form-dialog-title">Create Room</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Create Room and chat with your friends. No one can see your
+                  chats.
+                </DialogContentText>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="name"
+                  label="Room Name"
+                  type="text"
+                  fullWidth
+                  onChange={onChangeCreateRoomText}
+                  value={roomname}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialog} color="primary">
+                  Cancel
+                </Button>
+                <Button onClick={onSubmitRoom} color="primary">
+                  Create Room
+                </Button>
+              </DialogActions>
+            </form>
+          </Dialog>
         </Toolbar>
       </AppBar>
     </div>
