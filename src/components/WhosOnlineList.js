@@ -48,7 +48,7 @@ class WhosOnlineListItem extends Component {
     return (
       <Grid item xs>
         <List>
-          <ListItem>
+          <ListItem style={{color:"white"}}>
             <ListItemIcon>
               <FiberManualRecordIcon
                 style={{
