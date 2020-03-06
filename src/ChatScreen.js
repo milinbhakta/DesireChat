@@ -4,67 +4,57 @@ import MessageList from "./components/MessageList";
 import SendMessageForm from "./components/SendMessageForm";
 import TypingIndicator from "./components/TypingIndicator";
 import WhosOnlineList from "./components/WhosOnlineList";
-import {
-  Grid,
-  AppBar,
-  Toolbar,
-  Typography,
-  Menu,
-  MenuItem,
-  IconButton,
-  makeStyles,
-  Button,
-  TextField
-} from "@material-ui/core";
+import { Grid } from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
-import AccountCircle from "@material-ui/icons/AccountCircle";
-import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import Avatar from "@material-ui/core/Avatar";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import PersonIcon from "@material-ui/icons/Person";
+import MenuAppBar from "./components/MenuAppBar";
 
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      ready:false,
       currentUser: {},
       currentRoom: {},
       messages: [],
       usersWhoAreTyping: [],
       name: "",
-      roomname: "",
-      joinableRooms: {}
+      joinableRooms: []
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
     this.createRoom = this.createRoom.bind(this);
+    this.getJoinableRooms = this.getJoinableRooms.bind(this);
+    this.handleLoading = this.handleLoading.bind(this);
   }
-
+  // Send the Typing Events
   sendTypingEvent() {
     this.state.currentUser
       .isTypingIn({ roomId: this.state.currentRoom.id })
       .catch(error => console.error("error", error));
   }
+  // send messages
   sendMessage(text) {
-    this.state.currentUser.sendMessage({
-      text,
-      roomId: this.state.currentRoom.id
+    if (text.trim() === "") return;
+    const parts = [];
+    if (text.trim() !== "") {
+      parts.push({
+        type: "text/plain",
+        content: text
+      });
+    }
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
     });
   }
 
+  //create room
   createRoom(name) {
     this.state.currentUser
       .createRoom({
         id: `#${name}`,
         name: name,
-        private: true
+        private: false
       })
       .then(room => {
         console.log(`room created with name ${room.name}`);
@@ -81,17 +71,32 @@ class ChatScreen extends Component {
     }
   }
 
-  getJoinableRooms(currentUser) {
-    currentUser
-      .getUserJoinableRooms({
-        userId: currentUser.id
+  getJoinableRooms(id) {
+    this.state.currentUser
+      .getJoinableRooms({
+        userId: id
       })
-      .then(res => {
-        console.log(res);
+      .then(rooms => {
+        let joinrooms = [];
+        rooms.map(room => {
+          joinrooms.push({
+            id: room.id,
+            name: room.name,
+            createdByUserId: room.createdByUserId
+          });
+          return joinrooms;
+        });
+        this.setState({ joinableRooms: joinrooms });
+        console.log(joinrooms);
       })
       .catch(err => {
         console.log(err);
       });
+  }
+
+  handleLoading(){
+    this.getJoinableRooms(this.state.currentUser.id);
+    this.setState({ready:true});
   }
 
   componentDidMount() {
@@ -107,19 +112,12 @@ class ChatScreen extends Component {
       .connect()
       .then(currentUser => {
         this.setState({ currentUser });
-        currentUser
-          .getJoinableRooms()
-          .then(rooms => {
-            this.setState({ joinableRooms: rooms });
-          })
-          .catch(err => {
-            console.log(`Error getting joinable rooms: ${err}`);
-          });
-        return currentUser.subscribeToRoom({
+        console.log("CurrentsUser", currentUser);
+        return currentUser.subscribeToRoomMultipart({
           roomId: "fd2b99ca-74e8-4909-bafd-644409f033ee",
-          messageLimit: 100,
           hooks: {
             onMessage: message => {
+              console.log(message);
               this.setState({
                 messages: [...this.state.messages, message]
               });
@@ -137,13 +135,16 @@ class ChatScreen extends Component {
               });
             },
             onPresenceChange: () => this.forceUpdate()
-          }
+          },
+          messageLimit: 100
         });
       })
       .then(currentRoom => {
-        this.setState({ currentRoom, roomname: currentRoom.name });
+        this.setState({ currentRoom });
       })
       .catch(error => console.error("error", error));
+
+    setTimeout(this.handleLoading, 10000);
   }
 
   render() {
@@ -200,11 +201,15 @@ class ChatScreen extends Component {
         Color: "white"
       }
     };
-
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
-        <MenuAppBar onSubmit={this.createRoom} {...this.state} />
+        <MenuAppBar
+          onSubmit={this.createRoom}
+          currentUser={this.state.currentUser}
+          currentRoom={this.state.currentRoom}
+          joinableRooms={this.state.joinableRooms}
+        />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
@@ -213,9 +218,6 @@ class ChatScreen extends Component {
                 users={this.state.currentRoom.users}
               />
             </Grid>
-            {/* <Grid item xs>
-              <CreateRoomForm onSubmit={this.createRoom} />
-            </Grid> */}
           </Grid>
           <Grid item xs>
             <Grid item xs>
@@ -238,152 +240,6 @@ class ChatScreen extends Component {
       </div>
     );
   }
-}
-
-function MenuAppBar(props) {
-  const useStyles = makeStyles(theme => ({
-    root: {
-      flexGrow: 1
-    },
-    menuButton: {
-      marginRight: theme.spacing(2)
-    },
-    title: {
-      flexGrow: 1
-    }
-  }));
-  const classes = useStyles();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [open, setOpen] = React.useState(false);
-  const [roomname, setroomname] = React.useState("");
-  const [openlistdialog, setOpenlistdialog] = React.useState(false);
-  const {joinableRooms} = props;
-
-  const handleClick = event => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = event => {
-    if (event.target.innerText === "Join Room") {
-      console.log(props);
-    }
-    setAnchorEl(null);
-  };
-
-  const handleClickOpen = event => {
-    setOpen(true);
-    handleClose(event);
-  };
-
-  const handleClickOpenListDialog = event => {
-    setOpenlistdialog(true);
-    handleClose(event);
-  };
-
-  const handleListItemClick = value => {};
-  const handleCloseListDialog = () => {};
-  const handleCloseDialog = () => {
-    setOpen(false);
-  };
-
-  const onChangeCreateRoomText = e => {
-    setroomname(e.target.value);
-  };
-
-  const onSubmitRoom = e => {
-    e.preventDefault();
-    props.onSubmit(roomname);
-    setroomname("");
-    handleCloseDialog();
-  };
-
-  return (
-    <div className={classes.root}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" className={classes.title}>
-            Photos
-          </Typography>
-          <IconButton
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleClick}
-            color="inherit"
-          >
-            <AccountCircle />
-          </IconButton>
-          <Menu
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleClickOpen}>Create Room</MenuItem>
-            <MenuItem onClick={handleClickOpenListDialog}>Join Room</MenuItem>
-            <MenuItem onClick={handleClose}>Logout</MenuItem>
-          </Menu>
-          <Dialog
-            open={open}
-            onClose={handleCloseDialog}
-            aria-labelledby="form-dialog-title"
-          >
-            <form onSubmit={onSubmitRoom}>
-              <DialogTitle id="form-dialog-title">Create Room</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Create Room and chat with your friends. No one can see your
-                  chats.
-                </DialogContentText>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="name"
-                  label="Room Name"
-                  type="text"
-                  fullWidth
-                  onChange={onChangeCreateRoomText}
-                  value={roomname}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseDialog} color="primary">
-                  Cancel
-                </Button>
-                <Button onClick={onSubmitRoom} color="primary">
-                  Create Room
-                </Button>
-              </DialogActions>
-            </form>
-          </Dialog>
-          <Dialog
-            onClose={handleCloseListDialog}
-            aria-labelledby="simple-dialog-title"
-            openlistdialog={openlistdialog}
-          >
-            <DialogTitle id="simple-dialog-title">Select Room</DialogTitle>
-            {/* <List>
-              {joinableRooms.forEach(room => (
-                <ListItem
-                  button
-                  onClick={() => handleListItemClick(room)}
-                  key={room.id}
-                >
-                  <ListItemAvatar>
-                    <Avatar className={classes.avatar}>
-                      <PersonIcon />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary={room.name} />
-                </ListItem>
-              ))}
-            </List> */}
-          </Dialog>
-        </Toolbar>
-      </AppBar>
-    </div>
-  );
 }
 
 export default ChatScreen;
