@@ -23,6 +23,12 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
+import Avatar from "@material-ui/core/Avatar";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import ListItemText from "@material-ui/core/ListItemText";
+import PersonIcon from "@material-ui/icons/Person";
 
 class ChatScreen extends Component {
   constructor(props) {
@@ -33,7 +39,8 @@ class ChatScreen extends Component {
       messages: [],
       usersWhoAreTyping: [],
       name: "",
-      roomname: ""
+      roomname: "",
+      joinableRooms: {}
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
@@ -74,6 +81,19 @@ class ChatScreen extends Component {
     }
   }
 
+  getJoinableRooms(currentUser) {
+    currentUser
+      .getUserJoinableRooms({
+        userId: currentUser.id
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
   componentDidMount() {
     const chatManager = new Chatkit.ChatManager({
       instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
@@ -87,9 +107,16 @@ class ChatScreen extends Component {
       .connect()
       .then(currentUser => {
         this.setState({ currentUser });
-        console.log("User", currentUser);
+        currentUser
+          .getJoinableRooms()
+          .then(rooms => {
+            this.setState({ joinableRooms: rooms });
+          })
+          .catch(err => {
+            console.log(`Error getting joinable rooms: ${err}`);
+          });
         return currentUser.subscribeToRoom({
-          roomId: "d5e60275-05f7-47de-a634-e4af9c79c526",
+          roomId: "fd2b99ca-74e8-4909-bafd-644409f033ee",
           messageLimit: 100,
           hooks: {
             onMessage: message => {
@@ -177,7 +204,7 @@ class ChatScreen extends Component {
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
-        <MenuAppBar onSubmit={this.createRoom} />
+        <MenuAppBar onSubmit={this.createRoom} {...this.state} />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
@@ -227,23 +254,34 @@ function MenuAppBar(props) {
   }));
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [open, setOpen] = React.useState(false);
+  const [roomname, setroomname] = React.useState("");
+  const [openlistdialog, setOpenlistdialog] = React.useState(false);
+  const {joinableRooms} = props;
 
   const handleClick = event => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleClose = event => {
+    if (event.target.innerText === "Join Room") {
+      console.log(props);
+    }
     setAnchorEl(null);
   };
-
-  const [open, setOpen] = React.useState(false);
-  const [roomname, setroomname] = React.useState("");
 
   const handleClickOpen = event => {
     setOpen(true);
     handleClose(event);
   };
 
+  const handleClickOpenListDialog = event => {
+    setOpenlistdialog(true);
+    handleClose(event);
+  };
+
+  const handleListItemClick = value => {};
+  const handleCloseListDialog = () => {};
   const handleCloseDialog = () => {
     setOpen(false);
   };
@@ -255,7 +293,7 @@ function MenuAppBar(props) {
   const onSubmitRoom = e => {
     e.preventDefault();
     props.onSubmit(roomname);
-    setroomname('');
+    setroomname("");
     handleCloseDialog();
   };
 
@@ -283,7 +321,7 @@ function MenuAppBar(props) {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClickOpen}>Create Room</MenuItem>
-            <MenuItem onClick={handleClose}>Join Room</MenuItem>
+            <MenuItem onClick={handleClickOpenListDialog}>Join Room</MenuItem>
             <MenuItem onClick={handleClose}>Logout</MenuItem>
           </Menu>
           <Dialog
@@ -318,6 +356,29 @@ function MenuAppBar(props) {
                 </Button>
               </DialogActions>
             </form>
+          </Dialog>
+          <Dialog
+            onClose={handleCloseListDialog}
+            aria-labelledby="simple-dialog-title"
+            openlistdialog={openlistdialog}
+          >
+            <DialogTitle id="simple-dialog-title">Select Room</DialogTitle>
+            {/* <List>
+              {joinableRooms.forEach(room => (
+                <ListItem
+                  button
+                  onClick={() => handleListItemClick(room)}
+                  key={room.id}
+                >
+                  <ListItemAvatar>
+                    <Avatar className={classes.avatar}>
+                      <PersonIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText primary={room.name} />
+                </ListItem>
+              ))}
+            </List> */}
           </Dialog>
         </Toolbar>
       </AppBar>
