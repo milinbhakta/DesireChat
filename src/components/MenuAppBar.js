@@ -6,9 +6,24 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import PropTypes from "prop-types";
 import React, { Component } from "react";
-import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, TextField, Button, createMuiTheme } from "@material-ui/core";
-import JoinableRoomList from "./JoinableRoomList";
-
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  TextField,
+  Button,
+  createMuiTheme,
+  List,
+  ListItemAvatar,
+  ListItem,
+  Avatar
+} from "@material-ui/core";
+import ListItemText from "@material-ui/core/ListItemText";
+import PersonIcon from "@material-ui/icons/Person";
+import { blue } from "@material-ui/core/colors";
 
 class MenuAppBar extends Component {
   constructor(props) {
@@ -18,7 +33,8 @@ class MenuAppBar extends Component {
       open: false,
       roomname: "",
       openlistdialog: false,
-      joinableRooms: []
+      joinableRooms: this.props.joinableRooms,
+      selectedjoinroom_id: {}
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -28,12 +44,9 @@ class MenuAppBar extends Component {
     this.onChangeCreateRoomText = this.onChangeCreateRoomText.bind(this);
     this.handleClickOpenListDialog = this.handleClickOpenListDialog.bind(this);
     this.handleCloseListDialog = this.handleCloseListDialog.bind(this);
-  }
-
- componentDidMount() {
-    if (this.state.joinableRooms.length === 0) {
-      this.setState({ joinableRooms: this.props.joinableRooms });
-    }
+    this.handleListItemClick = this.handleListItemClick.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
+    this.getJoinableRooms = this.getJoinableRooms.bind(this);
   }
 
   handleClick(event) {
@@ -62,7 +75,7 @@ class MenuAppBar extends Component {
   onSubmit(e) {
     e.preventDefault();
     this.props.onSubmit(this.state.roomname);
-    this.setState({ roomname: '' });
+    this.setState({ roomname: "" });
     this.handleCloseDialog();
   }
 
@@ -73,7 +86,47 @@ class MenuAppBar extends Component {
   }
 
   handleClickOpenListDialog() {
+    this.getJoinableRooms(this.props.currentUser.id);
     this.setState({ openlistdialog: true });
+  }
+
+  handleListItemClick = value => {
+    this.joinRoom(value.currentTarget.dataset.room);
+    this.getJoinableRooms(this.props.currentUser.id);
+    this.handleCloseListDialog(value);
+  };
+
+  joinRoom(room_id) {
+    this.props.currentUser
+      .joinRoom({ roomId: room_id })
+      .then(room => {
+        console.log(`Joined room with ID: ${room.id}`);
+      })
+      .catch(err => {
+        console.log(`Error joining room ${room_id}: ${err}`);
+      });
+  }
+
+  getJoinableRooms(id) {
+    this.props.currentUser
+      .getJoinableRooms({
+        userId: id
+      })
+      .then(rooms => {
+        let joinrooms = [];
+        rooms.map(room => {
+          joinrooms.push({
+            id: room.id,
+            name: room.name,
+            createdByUserId: room.createdByUserId
+          });
+          return joinrooms;
+        });
+        this.setState({ joinableRooms: joinrooms });
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
 
   render() {
@@ -83,10 +136,14 @@ class MenuAppBar extends Component {
         flexGrow: 1
       },
       menuButton: {
-        marginRight: theme.spacing(2) 
+        marginRight: theme.spacing(2)
       },
       title: {
         flexGrow: 1
+      },
+      avatar: {
+        backgroundColor: blue[100],
+        color: blue[600]
       }
     };
 
@@ -152,6 +209,34 @@ class MenuAppBar extends Component {
                 </DialogActions>
               </form>
             </Dialog>
+            <Dialog
+              onClose={this.handleCloseListDialog}
+              open={this.state.openlistdialog}
+            >
+              <DialogTitle>Join Room</DialogTitle>
+              <List>
+                {this.state.joinableRooms.map(room => {
+                  let joinrooms = [];
+
+                  joinrooms = (
+                    <ListItem
+                      button
+                      onClick={this.handleListItemClick}
+                      key={room.id}
+                      data-room={room.id}
+                    >
+                      <ListItemAvatar>
+                        <Avatar style={styles.avatar}>
+                          <PersonIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={room.name} />
+                    </ListItem>
+                  );
+                  return joinrooms;
+                })}
+              </List>
+            </Dialog>
           </Toolbar>
         </AppBar>
       </div>
@@ -162,8 +247,8 @@ class MenuAppBar extends Component {
 MenuAppBar.propTypes = {
   currentUser: PropTypes.object.isRequired,
   joinableRooms: PropTypes.array.isRequired,
-  currentRoom:PropTypes.object.isRequired,
-  onSubmit: PropTypes.func.isRequired,
+  currentRoom: PropTypes.object.isRequired,
+  onSubmit: PropTypes.func.isRequired
 };
 
 // function MenuAppBar(props) {

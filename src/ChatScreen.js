@@ -4,27 +4,28 @@ import MessageList from "./components/MessageList";
 import SendMessageForm from "./components/SendMessageForm";
 import TypingIndicator from "./components/TypingIndicator";
 import WhosOnlineList from "./components/WhosOnlineList";
-import { Grid } from "@material-ui/core";
+import { Grid, Divider, Typography } from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
 import MenuAppBar from "./components/MenuAppBar";
-
+import RoomsList from "./components/RoomsList";
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      ready:false,
+      ready: false,
       currentUser: {},
       currentRoom: {},
       messages: [],
       usersWhoAreTyping: [],
       name: "",
-      joinableRooms: []
+      joinableRooms: [],
+      rooms: []
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
     this.createRoom = this.createRoom.bind(this);
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
-    this.handleLoading = this.handleLoading.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
   }
   // Send the Typing Events
   sendTypingEvent() {
@@ -94,30 +95,16 @@ class ChatScreen extends Component {
       });
   }
 
-  handleLoading(){
-    this.getJoinableRooms(this.state.currentUser.id);
-    this.setState({ready:true});
-  }
-
-  componentDidMount() {
-    const chatManager = new Chatkit.ChatManager({
-      instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
-      userId: this.props.currentUsername,
-      tokenProvider: new Chatkit.TokenProvider({
-        url: "http://localhost:3001/authenticate"
-      })
-    });
-
-    chatManager
-      .connect()
-      .then(currentUser => {
-        this.setState({ currentUser });
-        console.log("CurrentsUser", currentUser);
-        return currentUser.subscribeToRoomMultipart({
-          roomId: "fd2b99ca-74e8-4909-bafd-644409f033ee",
+  joinRoom(roomId) {
+    this.state.currentUser
+      .joinRoom({ roomId: roomId })
+      .then(room => {
+        console.log(`Joined room with ID: ${room.id}`);
+        this.setState({messages:[]});
+        this.state.currentUser.subscribeToRoomMultipart({
+          roomId: roomId,
           hooks: {
             onMessage: message => {
-              console.log(message);
               this.setState({
                 messages: [...this.state.messages, message]
               });
@@ -139,12 +126,54 @@ class ChatScreen extends Component {
           messageLimit: 100
         });
       })
+      .catch(err => {
+        console.log(`Error joining room ${roomId}: ${err}`);
+      });
+  }
+
+  componentDidMount() {
+    const chatManager = new Chatkit.ChatManager({
+      instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
+      userId: this.props.currentUsername,
+      tokenProvider: new Chatkit.TokenProvider({
+        url: "http://localhost:3001/authenticate"
+      })
+    });
+
+    chatManager
+      .connect()
+      .then(currentUser => {
+        this.setState({ currentUser, rooms: currentUser.rooms });
+        console.log("CurrentsUser", currentUser);
+        return currentUser.subscribeToRoomMultipart({
+          roomId: this.state.rooms[0].id,
+          messageLimit: 100,
+          hooks: {
+            onMessage: message => {
+              this.setState({
+                messages: [...this.state.messages, message]
+              });
+            },
+            onUserStartedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
+              });
+            },
+            onUserStoppedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
+                  username => username !== user.name
+                )
+              });
+            },
+            onPresenceChange: () => this.forceUpdate()
+          }
+        });
+      })
       .then(currentRoom => {
-        this.setState({ currentRoom });
+        this.setState({ currentRoom, roomname: currentRoom.name });
       })
       .catch(error => console.error("error", error));
-
-    setTimeout(this.handleLoading, 10000);
   }
 
   render() {
@@ -158,8 +187,9 @@ class ChatScreen extends Component {
         flex: 1
       },
       whosOnlineListContainer: {
-        backgroundColor: "#2c303b",
-        Color: "white"
+        backgroundColor: "#fafafa",
+        color: "#cfd8dc",
+        borderRight: "solid"
       },
       chatListContainer: {
         padding: 20,
@@ -199,6 +229,10 @@ class ChatScreen extends Component {
       },
       input: {
         Color: "white"
+      },
+      listtitle: {
+        color: "black",
+        padding: "10px"
       }
     };
     return (
@@ -213,15 +247,31 @@ class ChatScreen extends Component {
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Room Member
+              </Typography>
               <WhosOnlineList
                 currentUser={this.state.currentUser}
                 users={this.state.currentRoom.users}
+              />
+            </Grid>
+            <Divider style={{ backgroundColor: "#cfd8dc" }} />
+            <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Your Rooms
+              </Typography>
+              <RoomsList
+                currentUser={this.state.currentUser}
+                currentRoom={this.state.currentRoom}
+                rooms={this.state.rooms}
+                onJoin={this.joinRoom}
               />
             </Grid>
           </Grid>
           <Grid item xs>
             <Grid item xs>
               <MessageList
+                currentRoom={this.state.currentRoom}
                 messages={this.state.messages}
                 style={styles.chatList}
               />
