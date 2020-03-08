@@ -20,10 +20,10 @@ class RoomList extends Component {
 
   handleListItemClick = (event, index) => {
     this.setState({ selectedRoom: index });
-    this.handleJoinRoom(event,index);
-  }
+    this.handleJoinRoom(event, index);
+  };
 
-  handleJoinRoom(e,roomId){
+  handleJoinRoom(e, roomId) {
     e.preventDefault();
     this.props.onJoin(roomId);
   }
@@ -32,11 +32,6 @@ class RoomList extends Component {
     return (
       <ul>
         {this.props.rooms.map(room => {
-          // return (
-          //   <RoomListItem key={room.id} currentRoom={this.props.currentRoom}>
-          //     {room.name}
-          //   </RoomListItem>
-          // );
           return (
             <Grid item xs>
               <List>
@@ -67,46 +62,8 @@ class RoomList extends Component {
 
 RoomList.propTypes = {
   currentUser: PropTypes.object.isRequired,
-  currentRoom: PropTypes.array.isRequired,
+  currentRoom: PropTypes.object.isRequired,
   rooms: PropTypes.array.isRequired,
   onJoin: PropTypes.func.isRequired
 };
-
-// class RoomListItem extends Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//     };
-
-//   }
-
-//   componentDidMount() {
-//     if (this.state.selectedRoom === 0) {
-//       this.setState({ selectedRoom: this.props.currentRoom.id });
-//     }
-//   }
-
-//   handleListItemClick = (event, index) => {
-//     this.setState({ selectedRoom: index });
-//   };
-
-//   render() {
-//     return (
-//       <Grid item xs>
-//         <List>
-//           <ListItem
-//             style={{ color: "black" }}
-//             selected={this._reactInternalFiber.key === this.state.selectedRoom}
-//             onClick={event =>
-//               this.handleListItemClick(event, this._reactInternalFiber.key)
-//             }
-//           >
-//             <ListItemText primary={this.props.children} />
-//           </ListItem>
-//         </List>
-//       </Grid>
-//     );
-//   }
-// }
-
 export default RoomList;

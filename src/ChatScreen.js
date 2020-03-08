@@ -101,31 +101,6 @@ class ChatScreen extends Component {
       .then(room => {
         console.log(`Joined room with ID: ${room.id}`);
         console.log(room);
-        this.setState({ messages: [] });
-        this.state.currentUser.subscribeToRoomMultipart({
-          roomId: roomId,
-          hooks: {
-            onMessage: message => {
-              this.setState({
-                messages: [...this.state.messages, message]
-              });
-            },
-            onUserStartedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
-              });
-            },
-            onUserStoppedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
-                  username => username !== user.name
-                )
-              });
-            },
-            onPresenceChange: () => this.forceUpdate()
-          },
-          messageLimit: 100
-        });
       })
       .catch(err => {
         console.log(`Error joining room ${roomId}: ${err}`);
@@ -150,7 +125,7 @@ class ChatScreen extends Component {
         });
         console.log("Current User", currentUser);
         return currentUser.subscribeToRoomMultipart({
-          roomId: "12258a87-73fa-41f7-89bb-bdf3a5745a62",
+          roomId: "#Lambton",
           messageLimit: 100,
           hooks: {
             onMessage: message => {
