@@ -100,7 +100,8 @@ class ChatScreen extends Component {
       .joinRoom({ roomId: roomId })
       .then(room => {
         console.log(`Joined room with ID: ${room.id}`);
-        this.setState({messages:[]});
+        console.log(room);
+        this.setState({ messages: [] });
         this.state.currentUser.subscribeToRoomMultipart({
           roomId: roomId,
           hooks: {
@@ -133,7 +134,7 @@ class ChatScreen extends Component {
 
   componentDidMount() {
     const chatManager = new Chatkit.ChatManager({
-      instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
+      instanceLocator: "v1:us1:a53c6f61-2e05-403e-8bdc-699a9c55de4b",
       userId: this.props.currentUsername,
       tokenProvider: new Chatkit.TokenProvider({
         url: "http://localhost:3001/authenticate"
@@ -143,16 +144,17 @@ class ChatScreen extends Component {
     chatManager
       .connect()
       .then(currentUser => {
-        this.setState({ currentUser, rooms: currentUser.rooms });
-        console.log("CurrentsUser", currentUser);
+        this.setState({
+          currentUser,
+          rooms: currentUser.rooms
+        });
+        console.log("Current User", currentUser);
         return currentUser.subscribeToRoomMultipart({
-          roomId: this.state.rooms[0].id,
+          roomId: "12258a87-73fa-41f7-89bb-bdf3a5745a62",
           messageLimit: 100,
           hooks: {
             onMessage: message => {
-              this.setState({
-                messages: [...this.state.messages, message]
-              });
+              this.setState({ messages: [...this.state.messages, message] });
             },
             onUserStartedTyping: user => {
               this.setState({
@@ -166,14 +168,14 @@ class ChatScreen extends Component {
                 )
               });
             },
-            onPresenceChange: () => this.forceUpdate()
+            onPresenceChanged: () => this.forceUpdate()
           }
         });
       })
       .then(currentRoom => {
-        this.setState({ currentRoom, roomname: currentRoom.name });
+        this.setState({ currentRoom });
       })
-      .catch(error => console.error("error", error));
+      .catch(error => console.error("Error", error));
   }
 
   render() {
