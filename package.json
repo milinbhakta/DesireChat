@@ -5,7 +5,7 @@
   "dependencies": {
     "@material-ui/core": "^4.9.5",
     "@material-ui/icons": "^4.9.1",
-    "@pusher/chatkit-client": "^1.13.4",
+    "@pusher/chatkit-client": "^1.14.0",
     "@pusher/chatkit-server": "^2.4.0",
     "cors": "^2.8.4",
     "express": "^4.16.3",
@@ -18,7 +18,7 @@
     "typeface-roboto": "0.0.75"
   },
   "devDependencies": {
-    "concurrently": "^3.5.1"
+    "concurrently": "^5.1.0"
   },
   "scripts": {
     "start": "concurrently \"node ./server.js\" \"react-scripts start\"",

@@ -26,6 +26,7 @@ class ChatScreen extends Component {
     this.createRoom = this.createRoom.bind(this);
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
     this.joinRoom = this.joinRoom.bind(this);
+    this.subscribeToRoomMultipart = this.subscribeToRoomMultipart.bind(this);
   }
   // Send the Typing Events
   sendTypingEvent() {
@@ -49,21 +50,28 @@ class ChatScreen extends Component {
     });
   }
 
+  getRooms() {
+    this.currentUser.getJoinableRooms()
+    .then(joinableRooms => {
+        this.setState({
+            joinableRooms,
+            rooms: this.state.currentUser.rooms
+        })
+    })
+    .catch(err => console.log('error on joinableRooms: ', err))
+}
   //create room
   createRoom(name) {
-    this.state.currentUser
-      .createRoom({
-        id: `#${name}`,
-        name: name,
-        private: false
-      })
-      .then(room => {
-        console.log(`room created with name ${room.name}`);
-      })
-      .catch(err => {
-        console.log(`Error creating room ${err}`);
-      });
-  }
+    this.state.currentUser.createRoom({
+      id: `#${name}`,
+      name: name,
+      private: false
+    })
+    .then(room => {
+        this.subscribeToRoomMultipart(room.id)
+    })
+    .catch(err => console.log('error with createRoom: ', err))
+}
 
   onChange(e) {
     this.setState({ name: e.target.value });
@@ -100,7 +108,99 @@ class ChatScreen extends Component {
       .joinRoom({ roomId: roomId })
       .then(room => {
         console.log(`Joined room with ID: ${room.id}`);
+        this.subscribeToRoomMultipart(room.id);
+      })
+      .catch(err => {
+        console.log(`Error joining room ${roomId}: ${err}`);
+      });
+  }
+
+  subscribeToRoomMultipart(roomId) {
+    console.log("Subscribed Room Id",roomId);
+    this.setState({messages:[]});
+    this.state.currentUser
+      .subscribeToRoomMultipart({
+        roomId: roomId,
+        messageLimit: 100,
+        hooks: {
+          onMessage: message => {
+            this.setState({ messages: [...this.state.messages, message] });
+          },
+          onUserStartedTyping: user => {
+            this.setState({
+              usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
+            });
+          },
+          onUserStoppedTyping: user => {
+            this.setState({
+              usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
+                username => username !== user.name
+              )
+            });
+          },
+          onPresenceChanged: () => this.forceUpdate()
+        }
+      })
+      .then(currentRoom => {
+        this.setState({ currentRoom });
+      })
+      .catch(err => console.log("error on subscribing to room: ", err));
+  }
+
+  getJoinableRooms(id) {
+    this.state.currentUser
+      .getJoinableRooms({
+        userId: id
+      })
+      .then(rooms => {
+        let joinrooms = [];
+        rooms.map(room => {
+          joinrooms.push({
+            id: room.id,
+            name: room.name,
+            createdByUserId: room.createdByUserId
+          });
+          return joinrooms;
+        });
+        this.setState({ joinableRooms: joinrooms });
+        console.log(joinrooms);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
+  joinRoom(roomId) {
+    this.state.currentUser
+      .joinRoom({ roomId: roomId })
+      .then(room => {
+        console.log(`Joined room with ID: ${room.id}`);
         console.log(room);
+        this.setState({ messages: [] });
+        this.state.currentUser.subscribeToRoomMultipart({
+          roomId: roomId,
+          hooks: {
+            onMessage: message => {
+              this.setState({
+                messages: [...this.state.messages, message]
+              });
+            },
+            onUserStartedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
+              });
+            },
+            onUserStoppedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
+                  username => username !== user.name
+                )
+              });
+            },
+            onPresenceChange: () => this.forceUpdate()
+          },
+          messageLimit: 100
+        });
       })
       .catch(err => {
         console.log(`Error joining room ${roomId}: ${err}`);
@@ -115,7 +215,6 @@ class ChatScreen extends Component {
         url: "http://localhost:3001/authenticate"
       })
     });
-
     chatManager
       .connect()
       .then(currentUser => {
@@ -124,31 +223,8 @@ class ChatScreen extends Component {
           rooms: currentUser.rooms
         });
         console.log("Current User", currentUser);
-        return currentUser.subscribeToRoomMultipart({
-          roomId: "#Lambton",
-          messageLimit: 100,
-          hooks: {
-            onMessage: message => {
-              this.setState({ messages: [...this.state.messages, message] });
-            },
-            onUserStartedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
-              });
-            },
-            onUserStoppedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
-                  username => username !== user.name
-                )
-              });
-            },
-            onPresenceChanged: () => this.forceUpdate()
-          }
-        });
-      })
-      .then(currentRoom => {
-        this.setState({ currentRoom });
+        this.getRooms();
+        this.subscribeToRoomMultipart(this.state.rooms[0].id);
       })
       .catch(error => console.error("Error", error));
   }
