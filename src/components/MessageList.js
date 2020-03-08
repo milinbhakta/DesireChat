@@ -15,7 +15,7 @@ class MessagesList extends Component {
       container: {
         overflowY: "scroll",
         flex: 1,
-        height: "85vh"
+        height: "80vh"
       },
       ul: {
         listStyle: "none"
@@ -34,7 +34,7 @@ class MessagesList extends Component {
       <List style={styles.container}>
         {this.props.messages.map((message, index) => (
           <ListItem ref={ref => (this.newData = ref)} key={index}>
-            <ListItemText primary={message.senderId} secondary={message.text} />
+            <ListItemText primary={message.senderId} secondary={message.parts[0].payload.content} />
           </ListItem>
         ))}
       </List>

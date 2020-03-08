@@ -4,43 +4,58 @@ import MessageList from "./components/MessageList";
 import SendMessageForm from "./components/SendMessageForm";
 import TypingIndicator from "./components/TypingIndicator";
 import WhosOnlineList from "./components/WhosOnlineList";
-import { Grid } from "@material-ui/core";
+import { Grid, Divider, Typography } from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
-
+import MenuAppBar from "./components/MenuAppBar";
+import RoomsList from "./components/RoomsList";
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      ready: false,
       currentUser: {},
       currentRoom: {},
       messages: [],
       usersWhoAreTyping: [],
       name: "",
-      roomname: ""
+      joinableRooms: [],
+      rooms: []
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
     this.createRoom = this.createRoom.bind(this);
+    this.getJoinableRooms = this.getJoinableRooms.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
   }
-
+  // Send the Typing Events
   sendTypingEvent() {
     this.state.currentUser
       .isTypingIn({ roomId: this.state.currentRoom.id })
       .catch(error => console.error("error", error));
   }
+  // send messages
   sendMessage(text) {
-    this.state.currentUser.sendMessage({
-      text,
-      roomId: this.state.currentRoom.id
+    if (text.trim() === "") return;
+    const parts = [];
+    if (text.trim() !== "") {
+      parts.push({
+        type: "text/plain",
+        content: text
+      });
+    }
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
     });
   }
 
+  //create room
   createRoom(name) {
     this.state.currentUser
       .createRoom({
         id: `#${name}`,
         name: name,
-        private: true
+        private: false
       })
       .then(room => {
         console.log(`room created with name ${room.name}`);
@@ -57,23 +72,38 @@ class ChatScreen extends Component {
     }
   }
 
-  componentDidMount() {
-    const chatManager = new Chatkit.ChatManager({
-      instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
-      userId: this.props.currentUsername,
-      tokenProvider: new Chatkit.TokenProvider({
-        url: "http://localhost:3001/authenticate"
+  getJoinableRooms(id) {
+    this.state.currentUser
+      .getJoinableRooms({
+        userId: id
       })
-    });
+      .then(rooms => {
+        let joinrooms = [];
+        rooms.map(room => {
+          joinrooms.push({
+            id: room.id,
+            name: room.name,
+            createdByUserId: room.createdByUserId
+          });
+          return joinrooms;
+        });
+        this.setState({ joinableRooms: joinrooms });
+        console.log(joinrooms);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 
-    chatManager
-      .connect()
-      .then(currentUser => {
-        this.setState({ currentUser });
-        console.log("User", currentUser);
-        return currentUser.subscribeToRoom({
-          roomId: "d5e60275-05f7-47de-a634-e4af9c79c526",
-          messageLimit: 100,
+  joinRoom(roomId) {
+    this.state.currentUser
+      .joinRoom({ roomId: roomId })
+      .then(room => {
+        console.log(`Joined room with ID: ${room.id}`);
+        console.log(room);
+        this.setState({ messages: [] });
+        this.state.currentUser.subscribeToRoomMultipart({
+          roomId: roomId,
           hooks: {
             onMessage: message => {
               this.setState({
@@ -93,13 +123,59 @@ class ChatScreen extends Component {
               });
             },
             onPresenceChange: () => this.forceUpdate()
+          },
+          messageLimit: 100
+        });
+      })
+      .catch(err => {
+        console.log(`Error joining room ${roomId}: ${err}`);
+      });
+  }
+
+  componentDidMount() {
+    const chatManager = new Chatkit.ChatManager({
+      instanceLocator: "v1:us1:a53c6f61-2e05-403e-8bdc-699a9c55de4b",
+      userId: this.props.currentUsername,
+      tokenProvider: new Chatkit.TokenProvider({
+        url: "http://localhost:3001/authenticate"
+      })
+    });
+
+    chatManager
+      .connect()
+      .then(currentUser => {
+        this.setState({
+          currentUser,
+          rooms: currentUser.rooms
+        });
+        console.log("Current User", currentUser);
+        return currentUser.subscribeToRoomMultipart({
+          roomId: "12258a87-73fa-41f7-89bb-bdf3a5745a62",
+          messageLimit: 100,
+          hooks: {
+            onMessage: message => {
+              this.setState({ messages: [...this.state.messages, message] });
+            },
+            onUserStartedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
+              });
+            },
+            onUserStoppedTyping: user => {
+              this.setState({
+                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
+                  username => username !== user.name
+                )
+              });
+            },
+            onPresenceChanged: () => this.forceUpdate()
           }
         });
       })
       .then(currentRoom => {
-        this.setState({ currentRoom, roomname: currentRoom.name });
+        this.setState({ currentRoom });
       })
-      .catch(error => console.error("error", error));
+      .catch(error => console.error("Error", error));
   }
 
   render() {
@@ -113,8 +189,9 @@ class ChatScreen extends Component {
         flex: 1
       },
       whosOnlineListContainer: {
-        backgroundColor: "#2c303b",
-        Color: "white"
+        backgroundColor: "#fafafa",
+        color: "#cfd8dc",
+        borderRight: "solid"
       },
       chatListContainer: {
         padding: 20,
@@ -154,27 +231,49 @@ class ChatScreen extends Component {
       },
       input: {
         Color: "white"
+      },
+      listtitle: {
+        color: "black",
+        padding: "10px"
       }
     };
-
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
+        <MenuAppBar
+          onSubmit={this.createRoom}
+          currentUser={this.state.currentUser}
+          currentRoom={this.state.currentRoom}
+          joinableRooms={this.state.joinableRooms}
+        />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Room Member
+              </Typography>
               <WhosOnlineList
                 currentUser={this.state.currentUser}
                 users={this.state.currentRoom.users}
               />
             </Grid>
-            {/* <Grid item xs>
-              <CreateRoomForm onSubmit={this.createRoom} />
-            </Grid> */}
+            <Divider style={{ backgroundColor: "#cfd8dc" }} />
+            <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Your Rooms
+              </Typography>
+              <RoomsList
+                currentUser={this.state.currentUser}
+                currentRoom={this.state.currentRoom}
+                rooms={this.state.rooms}
+                onJoin={this.joinRoom}
+              />
+            </Grid>
           </Grid>
           <Grid item xs>
             <Grid item xs>
               <MessageList
+                currentRoom={this.state.currentRoom}
                 messages={this.state.messages}
                 style={styles.chatList}
               />
