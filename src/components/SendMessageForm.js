@@ -1,27 +1,34 @@
-import React, { Component, createRef } from "react";
+import React, { Component } from "react";
 import "./SendMessageForm.css";
-import { FilledInput, Grid } from "@material-ui/core";
+import {
+  FilledInput,
+  Grid,
+  createMuiTheme,
+  Menu,
+  MenuItem
+} from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Send from "@material-ui/icons/Send";
 import AddIcon from "@material-ui/icons/Add";
-import ClickAwayListener from "@material-ui/core/ClickAwayListener";
-import Grow from "@material-ui/core/Grow";
-import Paper from "@material-ui/core/Paper";
-import Popper from "@material-ui/core/Popper";
-import MenuItem from "@material-ui/core/MenuItem";
-import MenuList from "@material-ui/core/MenuList";
+import ImageIcon from "@material-ui/icons/Image";
+import AttachFileIcon from "@material-ui/icons/AttachFile";
+import LocationOnIcon from "@material-ui/icons/LocationOn";
 
 class SendMessageForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
       text: "",
-      open: false
+      anchorEl: null
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
-    this.anchorRef = createRef();
-    this.prevOpen = createRef(this.state.open);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+    this.handleImageClick = this.handleImageClick.bind(this);
+    this.handleFileClick = this.handleFileClick.bind(this);
+    this.handleLocation = this.handleLocation.bind(this);
+
   }
 
   componentDidMount() {}
@@ -39,25 +46,28 @@ class SendMessageForm extends Component {
     }
   }
 
-  handleToggle = () => {
-    // setOpen(prevOpen => !prevOpen);
+  handleClick = event => {
+    this.setState({ anchorEl: event.currentTarget });
   };
 
-  handleClose = event => {
-    // if (anchorRef.current && anchorRef.current.contains(event.target)) {
-    //   return;
-    // }
-    this.setState({ open: false });
+  handleClose = () => {
+    this.setState({ anchorEl: null });
   };
 
-  handleListKeyDown(event) {
-    if (event.key === "Tab") {
-      event.preventDefault();
-      this.setState({ open: false });
-    }
+  handleImageClick = () => {
+    this.handleClose();
+  };
+
+  handleFileClick = () => {
+    this.handleClose();
+  };
+
+  handleLocation = () => {
+    this.handleClose();
   }
 
   render() {
+    const theme = createMuiTheme();
     const styles = {
       root: {
         flexGrow: 1
@@ -69,16 +79,18 @@ class SendMessageForm extends Component {
       btn: {
         marginTop: "10px"
       },
-      plus: {}
+      plus: {},
+      paper: {
+        marginRight: theme.spacing(2)
+      }
     };
     return (
       <form onSubmit={this.onSubmit}>
         <Grid item xs style={styles.inputmessage}>
           <Button
-            ref={this.anchorRef}
-            aria-controls={this.state.open ? "menu-list-grow" : undefined}
+            aria-controls="simple-menu"
             aria-haspopup="true"
-            onClick={this.handleToggle}
+            onClick={this.handleClick}
           >
             <AddIcon />
           </Button>
@@ -100,70 +112,25 @@ class SendMessageForm extends Component {
             </Button>
           </Grid>
         </Grid>
-        <Popper
-          open={this.state.open}
-          anchorEl={this.anchorRef.current}
-          role={undefined}
-          transition
-          disablePortal
+        <Menu
+          id="simple-menu"
+          anchorEl={this.state.anchorEl}
+          keepMounted
+          open={Boolean(this.state.anchorEl)}
+          onClose={this.handleClose}
+          transitionDuration={343}
         >
-          {({ TransitionProps, placement }) => (
-            <Grow
-              {...TransitionProps}
-              style={{
-                transformOrigin:
-                  placement === "bottom" ? "center top" : "center bottom"
-              }}
-            >
-              <Paper>
-                <ClickAwayListener onClickAway={this.handleClose}>
-                  <MenuList
-                    autoFocusItem={this.state.open}
-                    id="menu-list-grow"
-                    onKeyDown={this.handleListKeyDown}
-                  >
-                    <MenuItem onClick={this.handleClose}>Profile</MenuItem>
-                    <MenuItem onClick={this.handleClose}>My account</MenuItem>
-                    <MenuItem onClick={this.handleClose}>Logout</MenuItem>
-                  </MenuList>
-                </ClickAwayListener>
-              </Paper>
-            </Grow>
-          )}
-        </Popper>
+          <MenuItem onClick={this.handleImageClick}>
+            <ImageIcon /> Image
+          </MenuItem>
+          <MenuItem onClick={this.handleFileClick}>
+            <AttachFileIcon /> File
+          </MenuItem>
+          <MenuItem onClick={this.handleLocation}>
+            <LocationOnIcon /> Location
+          </MenuItem>
+        </Menu>
       </form>
-      // <React.Fragment>
-      //   <CssBaseline />
-      //   <Container maxWidth="lg">
-      //     <form onSubmit={this.onSubmit}>
-      //       <Table>
-      //         <TableBody>
-      //           <TableRow>
-      //             <TableCell>
-      //               <FilledInput
-      //                 className="input"
-      //                 type="text"
-      //                 placeholder="Type a message here then hit ENTER"
-      //                 onChange={this.onChange}
-      //                 value={this.state.text}
-      //               />
-      //             </TableCell>
-      //             <TableCell>
-      //               <Button
-      //                 variant="contained"
-      //                 color="primary"
-      //                 endIcon={<Send />}
-      //                 onClick={this.onSubmit}
-      //               >
-      //                 Send
-      //               </Button>
-      //             </TableCell>
-      //           </TableRow>
-      //         </TableBody>
-      //       </Table>
-      //     </form>
-      //   </Container>
-      // </React.Fragment>
     );
   }
 }

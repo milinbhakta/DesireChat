@@ -5,7 +5,7 @@
   "dependencies": {
     "@material-ui/core": "^4.9.5",
     "@material-ui/icons": "^4.9.1",
-    "@pusher/chatkit-client": "^1.14.0",
+    "@pusher/chatkit-client": "^1.13.4",
     "@pusher/chatkit-server": "^2.4.0",
     "cors": "^2.8.4",
     "express": "^4.16.3",
@@ -13,12 +13,14 @@
     "npm": "^6.14.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "react-feather": "^2.0.3",
+    "react-images-upload": "^1.2.8",
     "react-meta-tags": "^0.7.4",
     "react-scripts": "1.1.1",
     "typeface-roboto": "0.0.75"
   },
   "devDependencies": {
-    "concurrently": "^5.1.0"
+    "concurrently": "^3.5.1"
   },
   "scripts": {
     "start": "concurrently \"node ./server.js\" \"react-scripts start\"",

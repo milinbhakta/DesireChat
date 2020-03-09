@@ -9,13 +9,16 @@ class RoomList extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedRoom: this.props.currentRoom.id
+      selectedRoom: ""
     };
     this.handleListItemClick = this.handleListItemClick.bind(this);
     this.handleJoinRoom = this.handleJoinRoom.bind(this);
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    console.log("Current Room ID", this.props.selectedRoom);
+    this.setState({ selectedRoom: this.props.selectedRoom });
+  }
   componentWillUnmount() {}
 
   handleListItemClick = (event, index) => {
@@ -36,8 +39,8 @@ class RoomList extends Component {
             <Grid item xs>
               <List>
                 <ListItem
-                  style={{ color: "black" }}
-                  selected={room.id === this.state.selectedRoom}
+                  // style={{ color: "black" }}
+                  selected={room.id === this.props.selectedRoom}
                   onClick={event => this.handleListItemClick(event, room.id)}
                   key={room.id}
                 >

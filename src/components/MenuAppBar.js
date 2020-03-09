@@ -47,6 +47,7 @@ class MenuAppBar extends Component {
     this.handleListItemClick = this.handleListItemClick.bind(this);
     this.joinRoom = this.joinRoom.bind(this);
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
   }
 
   handleClick(event) {
@@ -129,6 +130,10 @@ class MenuAppBar extends Component {
       });
   }
 
+  handleLogout() {
+    window.location = "/";
+  }
+
   render() {
     const theme = createMuiTheme();
     const styles = {
@@ -174,7 +179,7 @@ class MenuAppBar extends Component {
               <MenuItem onClick={this.handleClickOpenListDialog}>
                 Join Room
               </MenuItem>
-              <MenuItem onClick={this.handleClose}>Logout</MenuItem>
+              <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
             </Menu>
             <Dialog
               open={this.state.open}
