@@ -14,6 +14,8 @@ const chatkit = new Chatkit.default({
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+console.log("Public", __dirname+"/public");
+app.use(express.static('public'));
 
 app.post("/users", (req, res) => {
   const { username } = req.body;
