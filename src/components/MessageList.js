@@ -3,6 +3,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import "./MessagesList.css";
+import { Typography } from "@material-ui/core";
 
 class MessagesList extends Component {
   componentDidUpdate() {
@@ -13,6 +14,15 @@ class MessagesList extends Component {
 
   messages() {
     const arr = this.props.messages.map((message, index) => {
+      console.log(message);
+      var date = new Date(message.createdAt);
+      var options = {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true
+      };
+      var timeString = date.toLocaleString("en-US", options);
+
       if (message.parts[0].partType === "inline") {
         return (
           <ListItem ref={ref => (this.newData = ref)} key={index}>
@@ -20,6 +30,43 @@ class MessagesList extends Component {
               primary={message.senderId}
               secondary={message.parts[0].payload.content}
             />
+            <Typography variant="caption" display="block" gutterBottom>
+              {timeString}
+            </Typography>
+          </ListItem>
+        );
+      } else if (
+        message.parts[0].partType === "attachment" &&
+        Date.now() < Date.parse(message.parts[0].payload._expiration)
+      ) {
+        return (
+          <ListItem
+            ref={ref => (this.newData = ref)}
+            style={{ display: "block" }}
+            key={index}
+          >
+            <ListItemText
+              primary={message.senderId}
+              secondary={message.parts[0].payload.content}
+            />
+            <ListItemText
+              primary={
+                <React.Fragment>
+                  <img
+                    src={message.parts[0].payload._downloadURL}
+                    alt={message.parts[0].payload.name}
+                    style={{
+                      border: "none",
+                      maxHeight: "200px",
+                      maxWidth: "300px"
+                    }}
+                  />
+                </React.Fragment>
+              }
+            ></ListItemText>
+            <Typography variant="caption" display="block" gutterBottom>
+              {timeString}
+            </Typography>
           </ListItem>
         );
       } else {
@@ -27,19 +74,15 @@ class MessagesList extends Component {
           <ListItem ref={ref => (this.newData = ref)} key={index}>
             <ListItemText
               primary={message.senderId}
-              secondary={message.parts[0].payload.content}
+              secondary="Message Deleted..."
             />
-            <img
-              src={message.parts[0].payload._downloadURL}
-              alt={message.parts[0].payload.name}
-              style={{ border: "none", maxHeight: "200px", maxWidth: "300px" }}
-            />
+            <Typography variant="caption" display="block" gutterBottom>
+              {timeString}
+            </Typography>
           </ListItem>
         );
       }
     });
-    console.log(arr);
-
     return arr;
   }
 
