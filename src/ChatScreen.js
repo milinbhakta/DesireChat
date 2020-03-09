@@ -27,6 +27,7 @@ class ChatScreen extends Component {
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
     this.joinRoom = this.joinRoom.bind(this);
     this.subscribeToRoomMultipart = this.subscribeToRoomMultipart.bind(this);
+    this.sendFile = this.sendFile.bind(this);
   }
   // Send the Typing Events
   sendTypingEvent() {
@@ -44,6 +45,20 @@ class ChatScreen extends Component {
         content: text
       });
     }
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
+    });
+  }
+
+  sendFile(files) {
+    if (files.length === 0) return;
+    const parts = [];
+    files.forEach(pic => {
+      parts.push({
+        file: pic
+      });
+    });
     this.state.currentUser.sendMultipartMessage({
       roomId: `${this.state.currentRoom.id}`,
       parts
@@ -126,6 +141,8 @@ class ChatScreen extends Component {
         messageLimit: 100,
         hooks: {
           onMessage: message => {
+            console.log(message);
+            
             this.setState({ messages: [...this.state.messages, message] });
           },
           onUserStartedTyping: user => {
@@ -314,6 +331,7 @@ class ChatScreen extends Component {
               <SendMessageForm
                 onSubmit={this.sendMessage}
                 onChange={this.sendTypingEvent}
+                onFileSubmit={this.sendFile}
               />
             </Grid>
           </Grid>

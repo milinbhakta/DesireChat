@@ -13,13 +13,16 @@ import AddIcon from "@material-ui/icons/Add";
 import ImageIcon from "@material-ui/icons/Image";
 import AttachFileIcon from "@material-ui/icons/AttachFile";
 import LocationOnIcon from "@material-ui/icons/LocationOn";
+import { DropzoneDialog } from "material-ui-dropzone";
 
 class SendMessageForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
       text: "",
-      anchorEl: null
+      anchorEl: null,
+      open: false,
+      files: []
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
@@ -28,7 +31,8 @@ class SendMessageForm extends Component {
     this.handleImageClick = this.handleImageClick.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
     this.handleLocation = this.handleLocation.bind(this);
-
+    this.handleSaveImage = this.handleSaveImage.bind(this);
+    this.handleImageOpen = this.handleImageOpen.bind(this);
   }
 
   componentDidMount() {}
@@ -51,10 +55,11 @@ class SendMessageForm extends Component {
   };
 
   handleClose = () => {
-    this.setState({ anchorEl: null });
+    this.setState({ anchorEl: null, open: false });
   };
 
   handleImageClick = () => {
+    this.handleImageOpen();
     this.handleClose();
   };
 
@@ -64,6 +69,20 @@ class SendMessageForm extends Component {
 
   handleLocation = () => {
     this.handleClose();
+  };
+  handleSaveImage = (files) => {
+    this.setState({
+      files: files,
+      open: false
+    });
+    console.log(files);
+    this.props.onFileSubmit(files);
+  };
+
+  handleImageOpen() {
+    this.setState({
+      open: true
+    });
   }
 
   render() {
@@ -120,7 +139,7 @@ class SendMessageForm extends Component {
           onClose={this.handleClose}
           transitionDuration={343}
         >
-          <MenuItem onClick={this.handleImageClick}>
+          <MenuItem onClick={this.handleImageOpen}>
             <ImageIcon /> Image
           </MenuItem>
           <MenuItem onClick={this.handleFileClick}>
@@ -130,6 +149,14 @@ class SendMessageForm extends Component {
             <LocationOnIcon /> Location
           </MenuItem>
         </Menu>
+        <DropzoneDialog
+          open={this.state.open}
+          onSave={this.handleSaveImage }
+          acceptedFiles={["image/jpeg", "image/png", "image/bmp"]}
+          showPreviews={true}
+          maxFileSize={5000000}
+          onClose={this.handleClose}
+        />
       </form>
     );
   }

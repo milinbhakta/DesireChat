@@ -10,6 +10,39 @@ class MessagesList extends Component {
       this.newData.scrollIntoView({ behavior: "smooth" });
     }
   }
+
+  messages() {
+    const arr = this.props.messages.map((message, index) => {
+      if (message.parts[0].partType === "inline") {
+        return (
+          <ListItem ref={ref => (this.newData = ref)} key={index}>
+            <ListItemText
+              primary={message.senderId}
+              secondary={message.parts[0].payload.content}
+            />
+          </ListItem>
+        );
+      } else {
+        return (
+          <ListItem ref={ref => (this.newData = ref)} key={index}>
+            <ListItemText
+              primary={message.senderId}
+              secondary={message.parts[0].payload.content}
+            />
+            <img
+              src={message.parts[0].payload._downloadURL}
+              alt={message.parts[0].payload.name}
+              style={{ border: "none", maxHeight: "200px", maxWidth: "300px" }}
+            />
+          </ListItem>
+        );
+      }
+    });
+    console.log(arr);
+
+    return arr;
+  }
+
   render() {
     const styles = {
       container: {
@@ -27,16 +60,25 @@ class MessagesList extends Component {
       senderUsername: {
         fontWeight: "bold"
       },
-      message: { fontSize: 15 }
+      message: { fontSize: 15 },
+      img: {
+        height: "450",
+        width: "500"
+      }
     };
 
     return (
       <List style={styles.container}>
-        {this.props.messages.map((message, index) => (
-          <ListItem ref={ref => (this.newData = ref)} key={index}>
-            <ListItemText primary={message.senderId} secondary={message.parts[0].payload.content} />
-          </ListItem>
-        ))}
+        {this.messages()}
+        {/* {this.props.messages.map((message, index) => (
+          // <ListItem ref={ref => (this.newData = ref)} key={index}>
+          //   <ListItemText
+          //     primary={message.senderId}
+          //     secondary={message.parts[0].payload.content}
+          //   />
+          //    <img src={message.parts[0].payload._downloadUrl} alt={tile.title} />
+          // </ListItem>
+        ))} */}
       </List>
     );
   }
