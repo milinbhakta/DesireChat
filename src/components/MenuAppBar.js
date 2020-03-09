@@ -19,11 +19,19 @@ import {
   List,
   ListItemAvatar,
   ListItem,
-  Avatar
+  Avatar,
+  Divider
 } from "@material-ui/core";
 import ListItemText from "@material-ui/core/ListItemText";
 import PersonIcon from "@material-ui/icons/Person";
 import { blue } from "@material-ui/core/colors";
+import CloseIcon from '@material-ui/icons/Close';
+import Slide from '@material-ui/core/Slide';
+
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 class MenuAppBar extends Component {
   constructor(props) {
@@ -34,7 +42,8 @@ class MenuAppBar extends Component {
       roomname: "",
       openlistdialog: false,
       joinableRooms: this.props.joinableRooms,
-      selectedjoinroom_id: {}
+      selectedjoinroom_id: {},
+      openFullScreen: false
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -48,6 +57,8 @@ class MenuAppBar extends Component {
     this.joinRoom = this.joinRoom.bind(this);
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
+    this.handleCloseFullScreen = this.handleCloseFullScreen.bind(this);
+    this.handleOpenFullScreen = this.handleOpenFullScreen.bind(this);
   }
 
   handleClick(event) {
@@ -134,6 +145,15 @@ class MenuAppBar extends Component {
     window.location = "/";
   }
 
+  handleCloseFullScreen = () => {
+    this.setState({ openFullScreen: false });
+    this.handleClose();
+  };
+
+  handleOpenFullScreen = () => {
+    this.setState({openFullScreen:true});
+  };
+
   render() {
     const theme = createMuiTheme();
     const styles = {
@@ -143,12 +163,19 @@ class MenuAppBar extends Component {
       menuButton: {
         marginRight: theme.spacing(2)
       },
-      title: {
-        flexGrow: 1
-      },
       avatar: {
         backgroundColor: blue[100],
         color: blue[600]
+      },
+      appBar: {
+        position: 'relative',
+      },
+      title: {
+        flex: 1,
+      },
+      titlefull:{
+        marginLeft: theme.spacing(2),
+        flex: 1,
       }
     };
 
@@ -179,6 +206,7 @@ class MenuAppBar extends Component {
               <MenuItem onClick={this.handleClickOpenListDialog}>
                 Join Room
               </MenuItem>
+              <MenuItem onClick={this.handleOpenFullScreen}>Settings</MenuItem>
               <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
             </Menu>
             <Dialog
@@ -240,6 +268,43 @@ class MenuAppBar extends Component {
                   );
                   return joinrooms;
                 })}
+              </List>
+            </Dialog>
+            <Dialog
+              fullScreen
+              open={this.state.openFullScreen}
+              onClose={this.handleCloseFullScreen}
+              TransitionComponent={Transition}
+            >
+              <AppBar style={styles.appBar}>
+                <Toolbar>
+                  <IconButton
+                    edge="start"
+                    color="inherit"
+                    onClick={this.handleCloseFullScreen}
+                    aria-label="close"
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                  <Typography variant="h6" style={styles.title}>
+                    Settings
+                  </Typography>
+                  <Button autoFocus color="inherit"  onClick={this.handleCloseFullScreen}>
+                    save
+                  </Button>
+                </Toolbar>
+              </AppBar>
+              <List>
+                <ListItem button>
+                  <ListItemText primary="Phone ringtone" secondary="Titania" />
+                </ListItem>
+                <Divider />
+                <ListItem button>
+                  <ListItemText
+                    primary="Default notification ringtone"
+                    secondary="Tethys"
+                  />
+                </ListItem>
               </List>
             </Dialog>
           </Toolbar>
