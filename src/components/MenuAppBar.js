@@ -54,6 +54,7 @@ class MenuAppBar extends Component {
     this.handleClickOpenFullScreen = this.handleClickOpenFullScreen.bind(this);
     this.handleCloseFullScreen = this.handleCloseFullScreen.bind(this);
     this.createImageAvatar = this.createImageAvatar.bind(this);
+    this.OnAvatarChange = this.OnAvatarChange.bind(this);
   }
 
   componentDidMount() {
@@ -165,6 +166,10 @@ class MenuAppBar extends Component {
     this.handleClose();
   };
 
+  OnAvatarChange(avatarUrl){
+    this.props.OnAvatarChange(avatarUrl);
+  }
+
   render() {
     const theme = createMuiTheme();
     const styles = {
@@ -208,7 +213,7 @@ class MenuAppBar extends Component {
               onClick={this.handleClick}
               color="inherit"
             >
-               <Avatar src={this.props.currentUser === undefined ? <AccountCircle />: this.props.currentUser.avatarURL } >
+               <Avatar src={this.props.avatarUrl === undefined ? <AccountCircle />: this.props.avatarUrl } >
                 </Avatar>
             </IconButton>
             <Menu
@@ -293,6 +298,7 @@ class MenuAppBar extends Component {
               onClose={this.handleCloseFullScreen}
               avatars={this.state.images}
               currentUser={this.props.currentUser}
+              OnAvatarChange={this.OnAvatarChange}
             />
           </Toolbar>
         </AppBar>
@@ -305,7 +311,9 @@ MenuAppBar.propTypes = {
   currentUser: PropTypes.object.isRequired,
   joinableRooms: PropTypes.array.isRequired,
   currentRoom: PropTypes.object.isRequired,
-  onSubmit: PropTypes.func.isRequired
+  onSubmit: PropTypes.func.isRequired,
+  avatarUrl: PropTypes.string.isRequired,
+  OnAvatarChange: PropTypes.func.isRequired
 };
 
 export default MenuAppBar;

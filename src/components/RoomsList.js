@@ -67,6 +67,7 @@ RoomList.propTypes = {
   currentUser: PropTypes.object.isRequired,
   currentRoom: PropTypes.object.isRequired,
   rooms: PropTypes.array.isRequired,
-  onJoin: PropTypes.func.isRequired
+  onJoin: PropTypes.func.isRequired,
+
 };
 export default RoomList;

@@ -20,7 +20,7 @@ class ChatScreen extends Component {
       name: "",
       joinableRooms: [],
       rooms: [],
-      avatarUrl: ""
+      avatarUrl: undefined
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
@@ -29,6 +29,7 @@ class ChatScreen extends Component {
     this.joinRoom = this.joinRoom.bind(this);
     this.subscribeToRoomMultipart = this.subscribeToRoomMultipart.bind(this);
     this.sendFile = this.sendFile.bind(this);
+    this.OnAvatarChange = this.OnAvatarChange.bind(this);
   }
   // Send the Typing Events
   sendTypingEvent() {
@@ -166,6 +167,10 @@ class ChatScreen extends Component {
       .catch(err => console.log("error on subscribing to room: ", err));
   }
 
+  OnAvatarChange(avatarUrl){
+    this.setState({avatarUrl:avatarUrl});
+  }
+
   componentDidMount() {
     const chatManager = new Chatkit.ChatManager({
       instanceLocator: "v1:us1:a53c6f61-2e05-403e-8bdc-699a9c55de4b",
@@ -180,6 +185,7 @@ class ChatScreen extends Component {
         this.setState({
           currentUser,
           rooms: currentUser.rooms,
+          avatarUrl: currentUser.avatarURL
         });
         // console.log("Current User", currentUser);
         this.getRooms();
@@ -199,7 +205,7 @@ class ChatScreen extends Component {
         flex: 1
       },
       whosOnlineListContainer: {
-        borderRight: "solid"
+        // borderRight: "solid"
       },
       chatListContainer: {
         padding: 20,
@@ -252,6 +258,8 @@ class ChatScreen extends Component {
           currentUser={this.state.currentUser}
           currentRoom={this.state.currentRoom}
           joinableRooms={this.state.joinableRooms}
+          avatarUrl={this.state.avatarUrl}
+          OnAvatarChange = {this.OnAvatarChange}
         />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
@@ -262,6 +270,7 @@ class ChatScreen extends Component {
               <WhosOnlineList
                 currentUser={this.state.currentUser}
                 users={this.state.currentRoom.users}
+                avatarUrl={this.state.avatarUrl}
               />
             </Grid>
             <Divider style={{ backgroundColor: "#cfd8dc" }} />
@@ -278,6 +287,7 @@ class ChatScreen extends Component {
               />
             </Grid>
           </Grid>
+          <Divider orientation="vertical" flexItem />
           <Grid item xs>
             <Grid item xs>
               <MessageList

@@ -59,6 +59,7 @@ class FullScreenDialog extends Component {
       })
       .catch(error => console.error("error", error));
     this.setState({ selectedavatar: "", selected: false });
+    this.props.OnAvatarChange(this.state.selectedavatar);
     this.handleClose();
   }
 
