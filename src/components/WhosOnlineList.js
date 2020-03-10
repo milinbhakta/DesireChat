@@ -55,13 +55,13 @@ class WhosOnlineList extends Component {
         {this.props.users.map((user, index) => {
           if (user.id === this.props.currentUser.id) {
             return (
-              <WhosOnlineListItem key={index} presenceState="online">
+              <WhosOnlineListItem key={index} presenceState="online" avatarURL={user.avatarURL}>
                 {user.name} (You)
               </WhosOnlineListItem>
             );
           }
           return (
-            <WhosOnlineListItem key={index} presenceState={user.presence.state}>
+            <WhosOnlineListItem key={index} presenceState={user.presence.state} avatarURL={user.avatarURL}>
               {user.name}
             </WhosOnlineListItem>
           );
@@ -94,12 +94,9 @@ class WhosOnlineListItem extends Component {
                   vertical: "bottom",
                   horizontal: "right"
                 }}
-                variant={
-                  this.props.presenceState === "online" ? "dot" : ""
-                }
+                variant={this.props.presenceState === "online" ? "dot" : null}
               >
-                <Avatar>
-                  <AccountCircleIcon />
+                <Avatar src={this.props.avatarURL === undefined ? <AccountCircleIcon />: this.props.avatarURL } >
                 </Avatar>
               </StyledBadge>
             </ListItemIcon>

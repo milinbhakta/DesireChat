@@ -19,7 +19,8 @@ class ChatScreen extends Component {
       usersWhoAreTyping: [],
       name: "",
       joinableRooms: [],
-      rooms: []
+      rooms: [],
+      avatarUrl: ""
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
@@ -178,9 +179,9 @@ class ChatScreen extends Component {
       .then(currentUser => {
         this.setState({
           currentUser,
-          rooms: currentUser.rooms
+          rooms: currentUser.rooms,
         });
-        console.log("Current User", currentUser);
+        // console.log("Current User", currentUser);
         this.getRooms();
         this.subscribeToRoomMultipart(this.state.rooms[0].id);
       })

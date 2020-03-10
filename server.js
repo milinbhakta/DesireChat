@@ -15,7 +15,7 @@ const chatkit = new Chatkit.default({
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
-app.use("/public", express.static(path.resolve(__dirname, 'public')));
+app.use("/public", express.static(path.resolve(__dirname, "public")));
 
 app.post("/users", (req, res) => {
   const { username } = req.body;
@@ -31,6 +31,22 @@ app.post("/users", (req, res) => {
       } else {
         res.status(error.status).json(error);
       }
+    });
+});
+
+app.post("/updateuser", (req, res) => {
+  const { userId, AvatarUrl } = req.body;
+  chatkit
+    .updateUser({
+      id: userId,
+      avatarURL: AvatarUrl
+    })
+    .then(user => {
+      console.log(user);
+      res.sendStatus(201);
+    })
+    .catch(error => {
+      res.status(error.status).json(error);
     });
 });
 

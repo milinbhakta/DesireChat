@@ -37,7 +37,7 @@ class MenuAppBar extends Component {
       joinableRooms: this.props.joinableRooms,
       selectedjoinroom_id: {},
       openFullScreen: false,
-      images:{}
+      images: []
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -61,17 +61,15 @@ class MenuAppBar extends Component {
   }
 
   createImageAvatar = () => {
-    let images = {};
+    let images = [];
 
     for (let i = 1; i < 17; i++) {
       images[i] = {
         src: `http://localhost:3001/public/avatar/128_${i}.png`,
         title: `image${i}`
       };
-      //   console.log(`http://localhost:3001/public/avatar/128_${i}.png`);
     }
     this.setState({ images: images });
-    console.log(images);
   };
 
   handleClick(event) {
@@ -292,7 +290,8 @@ class MenuAppBar extends Component {
             <Settings
               open={this.state.openFullScreen}
               onClose={this.handleCloseFullScreen}
-              images={this.state.images}
+              avatars={this.state.images}
+              currentUser={this.props.currentUser}
             />
           </Toolbar>
         </AppBar>
