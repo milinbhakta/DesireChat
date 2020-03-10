@@ -208,7 +208,8 @@ class MenuAppBar extends Component {
               onClick={this.handleClick}
               color="inherit"
             >
-              <AccountCircle />
+               <Avatar src={this.props.currentUser === undefined ? <AccountCircle />: this.props.currentUser.avatarURL } >
+                </Avatar>
             </IconButton>
             <Menu
               id="simple-menu"

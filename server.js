@@ -41,8 +41,7 @@ app.post("/updateuser", (req, res) => {
       id: userId,
       avatarURL: AvatarUrl
     })
-    .then(user => {
-      console.log(user);
+    .then(() => {
       res.sendStatus(201);
     })
     .catch(error => {
