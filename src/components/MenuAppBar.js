@@ -19,20 +19,12 @@ import {
   List,
   ListItemAvatar,
   ListItem,
-  Avatar,
-  Divider
+  Avatar
 } from "@material-ui/core";
 import ListItemText from "@material-ui/core/ListItemText";
 import PersonIcon from "@material-ui/icons/Person";
 import { blue } from "@material-ui/core/colors";
-import CloseIcon from '@material-ui/icons/Close';
-import Slide from '@material-ui/core/Slide';
-
-
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+import Settings from "./Settings";
 
 class MenuAppBar extends Component {
   constructor(props) {
@@ -44,7 +36,8 @@ class MenuAppBar extends Component {
       openlistdialog: false,
       joinableRooms: this.props.joinableRooms,
       selectedjoinroom_id: {},
-      openFullScreen: false
+      openFullScreen: false,
+      images:{}
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -58,9 +51,28 @@ class MenuAppBar extends Component {
     this.joinRoom = this.joinRoom.bind(this);
     this.getJoinableRooms = this.getJoinableRooms.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
+    this.handleClickOpenFullScreen = this.handleClickOpenFullScreen.bind(this);
     this.handleCloseFullScreen = this.handleCloseFullScreen.bind(this);
-    this.handleOpenFullScreen = this.handleOpenFullScreen.bind(this);
+    this.createImageAvatar = this.createImageAvatar.bind(this);
   }
+
+  componentDidMount() {
+    this.createImageAvatar();
+  }
+
+  createImageAvatar = () => {
+    let images = {};
+
+    for (let i = 1; i < 17; i++) {
+      images[i] = {
+        src: `http://localhost:3001/public/avatar/128_${i}.png`,
+        title: `image${i}`
+      };
+      //   console.log(`http://localhost:3001/public/avatar/128_${i}.png`);
+    }
+    this.setState({ images: images });
+    console.log(images);
+  };
 
   handleClick(event) {
     this.setState({
@@ -146,13 +158,13 @@ class MenuAppBar extends Component {
     window.location = "/";
   }
 
+  handleClickOpenFullScreen = () => {
+    this.setState({ openFullScreen: true });
+  };
+
   handleCloseFullScreen = () => {
     this.setState({ openFullScreen: false });
     this.handleClose();
-  };
-
-  handleOpenFullScreen = () => {
-    this.setState({openFullScreen:true});
   };
 
   render() {
@@ -169,14 +181,18 @@ class MenuAppBar extends Component {
         color: blue[600]
       },
       appBar: {
-        position: 'relative',
+        position: "relative"
       },
       title: {
-        flex: 1,
+        flex: 1
       },
-      titlefull:{
+      titlefull: {
         marginLeft: theme.spacing(2),
-        flex: 1,
+        flex: 1
+      },
+      gridList: {
+        width: 500,
+        height: 450
       }
     };
 
@@ -207,7 +223,9 @@ class MenuAppBar extends Component {
               <MenuItem onClick={this.handleClickOpenListDialog}>
                 Join Room
               </MenuItem>
-              <MenuItem onClick={this.handleOpenFullScreen}>Settings</MenuItem>
+              <MenuItem onClick={this.handleClickOpenFullScreen}>
+                Settings
+              </MenuItem>
               <MenuItem onClick={this.handleLogout}>Logout</MenuItem>
             </Menu>
             <Dialog
@@ -271,43 +289,11 @@ class MenuAppBar extends Component {
                 })}
               </List>
             </Dialog>
-            <Dialog
-              fullScreen
+            <Settings
               open={this.state.openFullScreen}
               onClose={this.handleCloseFullScreen}
-              TransitionComponent={Transition}
-            >
-              <AppBar style={styles.appBar}>
-                <Toolbar>
-                  <IconButton
-                    edge="start"
-                    color="inherit"
-                    onClick={this.handleCloseFullScreen}
-                    aria-label="close"
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                  <Typography variant="h6" style={styles.title}>
-                    Settings
-                  </Typography>
-                  <Button autoFocus color="inherit"  onClick={this.handleCloseFullScreen}>
-                    save
-                  </Button>
-                </Toolbar>
-              </AppBar>
-              <List>
-                <ListItem button>
-                  <ListItemText primary="Phone ringtone" secondary="Titania" />
-                </ListItem>
-                <Divider />
-                <ListItem button>
-                  <ListItemText
-                    primary="Default notification ringtone"
-                    secondary="Tethys"
-                  />
-                </ListItem>
-              </List>
-            </Dialog>
+              images={this.state.images}
+            />
           </Toolbar>
         </AppBar>
       </div>
@@ -321,160 +307,5 @@ MenuAppBar.propTypes = {
   currentRoom: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired
 };
-
-// function MenuAppBar(props) {
-//   const useStyles = makeStyles(theme => ({
-//     root: {
-//       flexGrow: 1
-//     },
-//     menuButton: {
-//       marginRight: theme.spacing(2)
-//     },
-//     title: {
-//       flexGrow: 1
-//     }
-//   }));
-
-//   const classes = useStyles();
-//   const [anchorEl, setAnchorEl] = React.useState(null);
-//   const [open, setOpen] = React.useState(false);
-//   const [roomname, setroomname] = React.useState("");
-//   const [openlistdialog, setOpenlistdialog] = React.useState(false);
-//   const [joinableRooms, setjoinableRooms] = React.useState({});
-
-//   const handleClick = event => {
-//     setAnchorEl(event.currentTarget);
-//   };
-
-//   const handleClose = event => {
-//     if (event.target.innerText === "Join Room") {
-//       // console.log(props);
-//     }
-//     setAnchorEl(null);
-//   };
-
-//   const handleClickOpen = event => {
-//     setOpen(true);
-//     handleClose(event);
-//   };
-
-//   const handleCloseDialog = () => {
-//     setOpen(false);
-//   };
-
-//   const onChangeCreateRoomText = e => {
-//     setroomname(e.target.value);
-//   };
-
-//   const onSubmitRoom = e => {
-//     e.preventDefault();
-//     props.onSubmit(roomname);
-//     setroomname("");
-//     handleCloseDialog();
-//   };
-
-//   const handleCloseListDialog = value => {
-//     setOpenlistdialog(false);
-//     handleClose(value);
-//     // setSelectedValue(value);
-//   };
-
-//   const handleClickOpenListDialog = () => {
-//     setOpenlistdialog(true);
-//   };
-
-//   useEffect(() =>{
-//     if(!joinableRooms){
-//       props.currentUser
-//           .getJoinableRooms()
-//           .then(rooms => {
-//             setjoinableRooms({ rooms });
-//           })
-//           .catch(err => {
-//             console.log(`Error getting joinable rooms: ${err}`);
-//           });
-//     }
-//   });
-
-//   return (
-//     <div className={classes.root}>
-//       <AppBar position="static">
-//         <Toolbar>
-//           <Typography variant="h6" className={classes.title}>
-//             Photos
-//           </Typography>
-//           <IconButton
-//             aria-label="account of current user"
-//             aria-controls="menu-appbar"
-//             aria-haspopup="true"
-//             onClick={handleClick}
-//             color="inherit"
-//           >
-//             <AccountCircle />
-//           </IconButton>
-//           <Menu
-//             id="simple-menu"
-//             anchorEl={anchorEl}
-//             keepMounted
-//             open={Boolean(anchorEl)}
-//             onClose={handleClose}
-//           >
-//             <MenuItem onClick={handleClickOpen}>Create Room</MenuItem>
-//             <MenuItem onClick={handleClickOpenListDialog}>Join Room</MenuItem>
-//             <MenuItem onClick={handleClose}>Logout</MenuItem>
-//           </Menu>
-//           <Dialog
-//             open={open}
-//             onClose={handleCloseDialog}
-//             aria-labelledby="form-dialog-title"
-//           >
-//             <form onSubmit={onSubmitRoom}>
-//               <DialogTitle id="form-dialog-title">Create Room</DialogTitle>
-//               <DialogContent>
-//                 <DialogContentText>
-//                   Create Room and chat with your friends. No one can see your
-//                   chats.
-//                 </DialogContentText>
-//                 <TextField
-//                   autoFocus
-//                   margin="dense"
-//                   id="name"
-//                   label="Room Name"
-//                   type="text"
-//                   fullWidth
-//                   onChange={onChangeCreateRoomText}
-//                   value={roomname}
-//                 />
-//               </DialogContent>
-//               <DialogActions>
-//                 <Button onClick={handleCloseDialog} color="primary">
-//                   Cancel
-//                 </Button>
-//                 <Button onClick={onSubmitRoom} color="primary">
-//                   Create Room
-//                 </Button>
-//               </DialogActions>
-//             </form>
-//           </Dialog>
-//           <Dialog onClose={handleCloseListDialog} open={openlistdialog}>
-//             <DialogTitle>Join Room</DialogTitle>
-//             <List>
-//               {joinableRooms.map((room) => {
-//                 <ListItem button onClick={handleCloseListDialog} key={room.id}>
-//                   <ListItemAvatar>
-//                     <Avatar className={classes.avatar}>
-//                       <PersonIcon />
-//                     </Avatar>
-//                   </ListItemAvatar>
-//                   <ListItemText primary={room.name} />
-//                 </ListItem>;
-//               })}
-//             </List>
-//           </Dialog>
-//         </Toolbar>
-//       </AppBar>
-//     </div>
-//   );
-// }
 
 export default MenuAppBar;

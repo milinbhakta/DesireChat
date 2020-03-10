@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const Chatkit = require("@pusher/chatkit-server");
+const path = require("path");
 
 const app = express();
 
@@ -14,8 +15,7 @@ const chatkit = new Chatkit.default({
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
-console.log("Public", __dirname+"/public");
-app.use(express.static('public'));
+app.use("/public", express.static(path.resolve(__dirname, 'public')));
 
 app.post("/users", (req, res) => {
   const { username } = req.body;

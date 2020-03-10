@@ -141,8 +141,6 @@ class ChatScreen extends Component {
         messageLimit: 100,
         hooks: {
           onMessage: message => {
-            console.log(message);
-            
             this.setState({ messages: [...this.state.messages, message] });
           },
           onUserStartedTyping: user => {
@@ -166,43 +164,6 @@ class ChatScreen extends Component {
       })
       .catch(err => console.log("error on subscribing to room: ", err));
   }
-
-  // getJoinableRooms(id) {
-  //   this.state.currentUser
-  //     .getJoinableRooms({
-  //       userId: id
-  //     })
-  //     .then(rooms => {
-  //       let joinrooms = [];
-  //       rooms.map(room => {
-  //         joinrooms.push({
-  //           id: room.id,
-  //           name: room.name,
-  //           createdByUserId: room.createdByUserId
-  //         });
-  //         return joinrooms;
-  //       });
-  //       this.setState({ joinableRooms: joinrooms });
-  //       console.log(joinrooms);
-  //     })
-  //     .catch(err => {
-  //       console.log(err);
-  //     });
-  // }
-
-  // joinRoom(roomId) {
-  //   this.state.currentUser
-  //     .joinRoom({ roomId: roomId })
-  //     .then(room => {
-  //       console.log(`Joined room with ID: ${room.id}`);
-  //       console.log(room);
-  //       this.setState({ messages: [] });
-  //       this.subscribeToRoomMultipart(room.id);
-  //     })
-  //     .catch(err => {
-  //       console.log(`Error Ocurred joining the Room ${err}`);
-  //     });
-  // }
 
   componentDidMount() {
     const chatManager = new Chatkit.ChatManager({

@@ -14,7 +14,6 @@ class MessagesList extends Component {
 
   messages() {
     const arr = this.props.messages.map((message, index) => {
-      console.log(message);
       var date = new Date(message.createdAt);
       var options = {
         hour: "numeric",
