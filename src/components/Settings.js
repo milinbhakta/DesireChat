@@ -8,7 +8,12 @@ import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import CloseIcon from "@material-ui/icons/Close";
 import Slide from "@material-ui/core/Slide";
-import { GridList, GridListTile, ListSubheader } from "@material-ui/core";
+import {
+  GridList,
+  GridListTile,
+  ListSubheader,
+  Divider
+} from "@material-ui/core";
 import PropTypes from "prop-types";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -20,19 +25,25 @@ class FullScreenDialog extends Component {
     super(props);
     this.state = {
       open: this.props.open,
-      selectedavatar: ""
+      selectedavatar: "",
+      selected: false
     };
     this.handleClose = this.handleClose.bind(this);
     this.handleImageOnclick = this.handleImageOnclick.bind(this);
+    this.handleSave = this.handleSave.bind(this);
   }
 
   handleClose = () => {
+    this.setState({ selectedavatar: "", selected: false });
     this.props.onClose();
   };
 
   handleImageOnclick(e) {
     console.log(e.target.src);
-    let avatarUrl = e.target.src;
+    this.setState({ selectedavatar: e.target.src, selected: true });
+  }
+
+  handleSave() {
     fetch("http://localhost:3001/updateuser", {
       method: "POST",
       headers: {
@@ -40,13 +51,15 @@ class FullScreenDialog extends Component {
       },
       body: JSON.stringify({
         userId: this.props.currentUser.id,
-        AvatarUrl: avatarUrl
+        AvatarUrl: this.state.selectedavatar
       })
     })
       .then(response => {
         console.log(response);
       })
       .catch(error => console.error("error", error));
+    this.setState({ selectedavatar: "", selected: false });
+    this.handleClose();
   }
 
   render() {
@@ -71,6 +84,11 @@ class FullScreenDialog extends Component {
       },
       gridList: {
         marginLeft: theme.spacing(2)
+      },
+      selecteddiv:{
+        display:this.state.selected ?'block':'none',
+        margin:"50px",
+        alignSelf: "center"
       }
     };
     return (
@@ -94,7 +112,7 @@ class FullScreenDialog extends Component {
               <Typography variant="h6" style={classes.title}>
                 Settings
               </Typography>
-              <Button autoFocus color="inherit" onClick={this.handleClose}>
+              <Button autoFocus color="inherit" onClick={this.handleSave}>
                 save
               </Button>
             </Toolbar>
@@ -119,6 +137,10 @@ class FullScreenDialog extends Component {
                 </GridListTile>
               ))}
             </GridList>
+          </div>
+          <Divider />
+          <div style={classes.selecteddiv}>
+            <img src={this.state.selectedavatar} alt="Selected Avatar"></img>
           </div>
         </Dialog>
       </div>
