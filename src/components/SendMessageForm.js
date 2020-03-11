@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import MapSelector from "./MapSelector";
 import "./SendMessageForm.css";
 import {
   FilledInput,
@@ -22,7 +23,8 @@ class SendMessageForm extends Component {
       text: "",
       anchorEl: null,
       open: false,
-      files: []
+      files: [],
+      openLocation: false
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
@@ -30,7 +32,8 @@ class SendMessageForm extends Component {
     this.handleClose = this.handleClose.bind(this);
     this.handleImageClick = this.handleImageClick.bind(this);
     this.handleFileClick = this.handleFileClick.bind(this);
-    this.handleLocation = this.handleLocation.bind(this);
+    this.handleLocationOpen = this.handleLocationOpen.bind(this);
+    this.handleLocationClose = this.handleLocationClose.bind(this);
     this.handleSaveImage = this.handleSaveImage.bind(this);
     this.handleImageOpen = this.handleImageOpen.bind(this);
   }
@@ -67,10 +70,16 @@ class SendMessageForm extends Component {
     this.handleClose();
   };
 
-  handleLocation = () => {
+  handleLocationOpen = () => {
+    this.setState({ openLocation: true });
+  };
+
+  handleLocationClose = () => {
+    this.setState({ openLocation: false });
     this.handleClose();
   };
-  handleSaveImage = (files) => {
+
+  handleSaveImage = files => {
     this.setState({
       files: files,
       open: false
@@ -145,17 +154,22 @@ class SendMessageForm extends Component {
           <MenuItem onClick={this.handleFileClick}>
             <AttachFileIcon /> File
           </MenuItem>
-          <MenuItem onClick={this.handleLocation}>
+          <MenuItem onClick={this.handleLocationOpen}>
             <LocationOnIcon /> Location
           </MenuItem>
         </Menu>
         <DropzoneDialog
           open={this.state.open}
-          onSave={this.handleSaveImage }
+          onSave={this.handleSaveImage}
           acceptedFiles={["image/jpeg", "image/png", "image/bmp"]}
           showPreviews={true}
           maxFileSize={5000000}
           onClose={this.handleClose}
+        />
+
+        <MapSelector
+          open={this.state.openLocation}
+          onClose={this.handleLocationClose}
         />
       </form>
     );
