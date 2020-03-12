@@ -14,6 +14,7 @@ class MessagesList extends Component {
 
   messages() {
     const arr = this.props.messages.map((message, index) => {
+      console.log(message);
       var date = new Date(message.createdAt);
       var options = {
         hour: "numeric",
@@ -51,36 +52,106 @@ class MessagesList extends Component {
         message.parts[0].partType === "attachment" &&
         Date.now() < Date.parse(message.parts[0].payload._expiration)
       ) {
-        return (
-          <ListItem
-            ref={ref => (this.newData = ref)}
-            style={{ display: "block" }}
-            key={index}
-          >
-            <ListItemText
-              primary={message.senderId}
-              secondary={message.parts[0].payload.content}
-            />
-            <ListItemText
-              primary={
-                <React.Fragment>
-                  <img
-                    src={message.parts[0].payload._downloadURL}
-                    alt={message.parts[0].payload.name}
-                    style={{
-                      border: "none",
-                      maxHeight: "200px",
-                      maxWidth: "300px"
-                    }}
-                  />
-                </React.Fragment>
-              }
-            ></ListItemText>
-            <Typography variant="caption" display="block" gutterBottom>
-              {timeString}
-            </Typography>
-          </ListItem>
-        );
+        if (message.parts[0].payload.type.match("image/")) {
+          return (
+            <ListItem
+              ref={ref => (this.newData = ref)}
+              style={{ display: "block" }}
+              key={index}
+            >
+              <ListItemText
+                primary={message.senderId}
+                secondary={message.parts[0].payload.content}
+              />
+              <ListItemText
+                primary={
+                  <React.Fragment>
+                    <a href={message.parts[0].payload._downloadURL} target="_blank">
+                      <img
+                        src={message.parts[0].payload._downloadURL}
+                        alt={message.parts[0].payload.name}
+                        style={{
+                          border: "none",
+                          maxHeight: "200px",
+                          maxWidth: "300px"
+                        }}
+                      />{" "}
+                    </a>
+                  </React.Fragment>
+                }
+              ></ListItemText>
+              <Typography variant="caption" display="block" gutterBottom>
+                {timeString}
+              </Typography>
+            </ListItem>
+          );
+        } else if (message.parts[0].payload.type.match('application/pdf')) {
+          return (
+            <ListItem
+              ref={ref => (this.newData = ref)}
+              style={{ display: "block" }}
+              key={index}
+            >
+              <ListItemText
+                primary={message.senderId}
+                secondary={message.parts[0].payload.content}
+              />
+              <ListItemText
+                primary={
+                  <React.Fragment>
+                    <a href={message.parts[0].payload._downloadURL} target="_blank">
+                      <img
+                        src={message.parts[0].payload._downloadURL}
+                        alt={message.parts[0].payload.name}
+                        style={{
+                          border: "none",
+                          maxHeight: "200px",
+                          maxWidth: "300px"
+                        }}
+                      />{" "}
+                    </a>
+                  </React.Fragment>
+                }
+              ></ListItemText>
+              <Typography variant="caption" display="block" gutterBottom>
+                {timeString}
+              </Typography>
+            </ListItem>
+          );
+        } else {
+          return (
+            <ListItem
+              ref={ref => (this.newData = ref)}
+              style={{ display: "block" }}
+              key={index}
+            >
+              <ListItemText
+                primary={message.senderId}
+                secondary={message.parts[0].payload.content}
+              />
+              <ListItemText
+                primary={
+                  <React.Fragment>
+                    <a href={message.parts[0].payload._downloadURL}>
+                      <img
+                        src={message.parts[0].payload._downloadURL}
+                        alt={message.parts[0].payload.name}
+                        style={{
+                          border: "none",
+                          maxHeight: "200px",
+                          maxWidth: "300px"
+                        }}
+                      />{" "}
+                    </a>
+                  </React.Fragment>
+                }
+              ></ListItemText>
+              <Typography variant="caption" display="block" gutterBottom>
+                {timeString}
+              </Typography>
+            </ListItem>
+          );
+        }
       } else {
         return (
           <ListItem ref={ref => (this.newData = ref)} key={index}>

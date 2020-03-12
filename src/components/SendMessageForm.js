@@ -25,7 +25,8 @@ class SendMessageForm extends Component {
       open: false,
       files: [],
       openLocation: false,
-      marker:{}
+      marker:{},
+      openFile:false
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
@@ -37,6 +38,8 @@ class SendMessageForm extends Component {
     this.handleLocationClose = this.handleLocationClose.bind(this);
     this.handleSaveImage = this.handleSaveImage.bind(this);
     this.handleImageOpen = this.handleImageOpen.bind(this);
+    this.handleFileOpen = this.handleFileOpen.bind(this);
+    this.handleSaveFile =this.handleSaveFile.bind(this);
   }
 
   componentDidMount() {}
@@ -68,6 +71,7 @@ class SendMessageForm extends Component {
   };
 
   handleFileClick = () => {
+    this.handleFileOpen();
     this.handleClose();
   };
 
@@ -92,9 +96,24 @@ class SendMessageForm extends Component {
     this.props.onFileSubmit(files);
   };
 
+  handleSaveFile = files => {
+    this.setState({
+      files: files,
+      openFile: false
+    });
+    console.log(files);
+    this.props.onFileSubmit(files);
+  };
+
   handleImageOpen() {
     this.setState({
       open: true
+    });
+  }
+
+  handleFileOpen() {
+    this.setState({
+      openFile: true
     });
   }
 
@@ -166,6 +185,14 @@ class SendMessageForm extends Component {
           open={this.state.open}
           onSave={this.handleSaveImage}
           acceptedFiles={["image/jpeg", "image/png", "image/bmp"]}
+          showPreviews={true}
+          maxFileSize={5000000}
+          onClose={this.handleClose}
+        />
+        <DropzoneDialog
+          open={this.state.openFile}
+          onSave={this.handleSaveFile}
+          acceptedFiles={['.pdf', 'audio/*','video/*']}
           showPreviews={true}
           maxFileSize={5000000}
           onClose={this.handleClose}
