@@ -34,6 +34,19 @@ class MessagesList extends Component {
             </Typography>
           </ListItem>
         );
+      } else if (message.parts[0].partType === undefined) {
+        console.log("Message Undefined", message);
+        return (
+          <ListItem ref={ref => (this.newData = ref)} key={index}>
+            <ListItemText
+              primary={message.senderId}
+              secondary="Message Undefined..."
+            />
+            <Typography variant="caption" display="block" gutterBottom>
+              {timeString}
+            </Typography>
+          </ListItem>
+        );
       } else if (
         message.parts[0].partType === "attachment" &&
         Date.now() < Date.parse(message.parts[0].payload._expiration)

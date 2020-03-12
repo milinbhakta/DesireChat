@@ -15,8 +15,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const MAPBOX_TOKEN =
-  "pk.eyJ1IjoibWlsaW5iaGFrdGEiLCJhIjoiY2s3bXRvMzJlMDcyMTNrcTg2ZWI5ODRlaSJ9.lJhVMW_A65jIeG_oFINQoA";
 
 export default class MapSelector extends Component {
   constructor(props) {
@@ -25,39 +23,24 @@ export default class MapSelector extends Component {
       lng: 5,
       lat: 34,
       zoom: 2,
-      userLocation: {}
+      marker: {
+        latitude: 0,
+        longitude: 0
+      },
     };
     this.handleClose = this.handleClose.bind(this);
-    this.setUserLocation = this.setUserLocation.bind(this);
+    this.handleSave = this.handleSave.bind(this);
   }
 
-  componentDidMount() {
-    this.setUserLocation();
-  }
 
   handleClose = () => {
-    this.props.onClose();
+    this.props.onClose(this.state.marker);
   };
 
-  setUserLocation = () => {
-    navigator.geolocation.getCurrentPosition(position => {
-      let setUserLocation = {
-        lat: position.coords.latitude,
-        long: position.coords.longitude
-      };
-      let newViewport = {
-        height: "100vh",
-        width: "100vw",
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        zoom: 10
-      };
-      this.setState({
-        viewport: newViewport,
-        userLocation: setUserLocation
-      });
-    });
-  };
+  handleSave(marker){
+    this.setState({marker});
+    console.log("Map Selector",marker);
+  }
 
   render() {
     const theme = createMuiTheme();
@@ -107,7 +90,7 @@ export default class MapSelector extends Component {
             </Toolbar>
           </AppBar>
           {/* map here */}
-          <Map userLocation={this.state.userLocation}/>
+          <Map onSave={this.handleSave}/>
         </Dialog>
       </div>
     );

@@ -30,6 +30,7 @@ class ChatScreen extends Component {
     this.subscribeToRoomMultipart = this.subscribeToRoomMultipart.bind(this);
     this.sendFile = this.sendFile.bind(this);
     this.OnAvatarChange = this.OnAvatarChange.bind(this);
+    this.sendLocation = this.sendLocation.bind(this);
   }
   // Send the Typing Events
   sendTypingEvent() {
@@ -39,6 +40,7 @@ class ChatScreen extends Component {
   }
   // send messages
   sendMessage(text) {
+    console.log(text);
     if (text.trim() === "") return;
     const parts = [];
     if (text.trim() !== "") {
@@ -53,6 +55,8 @@ class ChatScreen extends Component {
     });
   }
 
+  
+
   sendFile(files) {
     if (files.length === 0) return;
     const parts = [];
@@ -61,6 +65,26 @@ class ChatScreen extends Component {
         file: pic
       });
     });
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
+    });
+  }
+
+  sendLocation(marker){
+    console.log("Marker in Send Location Method",marker);
+    if(Object.keys(marker).length === 0 && marker.constructor === Object){
+      return;
+    }
+    const marstring = `Marker:{latitude:${marker.latitude.toString()},longitude:${marker.longitude.toString()}}`;
+    if (marstring.trim() === "") return;
+    const parts = [];
+    if (marstring.trim() !== "") {
+      parts.push({
+        type: "text/plain",
+        content: marstring
+      });
+    }
     this.state.currentUser.sendMultipartMessage({
       roomId: `${this.state.currentRoom.id}`,
       parts
@@ -304,6 +328,7 @@ class ChatScreen extends Component {
                 onSubmit={this.sendMessage}
                 onChange={this.sendTypingEvent}
                 onFileSubmit={this.sendFile}
+                onSendLocation = {this.sendLocation}
               />
             </Grid>
           </Grid>

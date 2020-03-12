@@ -1,186 +1,164 @@
-// import React, { Component } from "react";
-// import mapboxGl from "mapbox-gl";
-// import "mapbox-gl/dist/mapbox-gl.css";
-
-// import "./MapSelector.css";
-// mapboxGl.accessToken =
-//   "pk.eyJ1IjoibWlsaW5iaGFrdGEiLCJhIjoiY2s3bXRvMzJlMDcyMTNrcTg2ZWI5ODRlaSJ9.lJhVMW_A65jIeG_oFINQoA";
-
-// export default class Map extends Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       lng: 114.1441,
-//       lat: 22.375,
-//       zoom: 11,
-//       features: [],
-//       isLoading: false,
-//       userLocation: {}
-//     };
-//   }
-
-//   componentDidMount() {
-//     const geojson = {
-//       type: "FeatureCollection",
-//       features: [
-//         {
-//           type: "Feature",
-//           geometry: {
-//             type: "Point",
-//             coordinates: [-77.032, 38.913]
-//           },
-//           properties: {
-//             title: "Mapbox",
-//             description: "Washington, D.C."
-//           }
-//         },
-//         {
-//           type: "Feature",
-//           geometry: {
-//             type: "Point",
-//             coordinates: [-122.414, 37.776]
-//           },
-//           properties: {
-//             title: "Mapbox",
-//             description: "San Francisco, California"
-//           }
-//         }
-//       ]
-//     };
-
-//     const map = new mapboxGl.Map({
-//       container: this.mapContainer,
-//       style: "mapbox://styles/mapbox/streets-v11",
-//       center: [this.state.lng, this.state.lat],
-//       zoom: this.state.zoom
-//     });
-
-//     map.on("load", () => {
-//       this.setState({
-//         features: this.state.features
-//       });
-//       map.addSource("hk-schools-loc", {
-//         type: "geojson",
-//         data: geojson
-//       });
-//     });
-
-//     // geojson.features.forEach(function(marker) {
-//     //   // create a HTML element for each feature
-//     //   var el = document.createElement("div");
-//     //   el.className = "marker";
-
-//     //   // make a marker for each feature and add to the map
-//     //   new mapboxGl.Marker(el).setLngLat(marker.geometry.coordinates).addTo(map);
-//     // });
-//   }
-//   render() {
-//     return (
-//       <div>
-//         <div ref={el => (this.mapContainer = el)} className="mapContainer" />
-//       </div>
-//     );
-//   }
-// }
-
+import Pin from "./Pin";
+import "react-map-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import React, { Component } from "react";
-import MapGL, { NavigationControl, Marker, Popup } from "react-map-gl";
-import LocationOnIcon from "@material-ui/icons/LocationOn";
-const TOKEN =
-  "pk.eyJ1IjoibWlsaW5iaGFrdGEiLCJhIjoiY2s3bXRvMzJlMDcyMTNrcTg2ZWI5ODRlaSJ9.lJhVMW_A65jIeG_oFINQoA";
-const navStyle = {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  padding: "10px"
-};
+import MapGL, {
+  GeolocateControl,
+  NavigationControl,
+  Marker
+} from "react-map-gl";
+import  { GeoJsonLayer } from "deck.gl";
+import Geocoder from "react-map-gl-geocoder";
+import "./MapSelector.css";
 
-export default class Map extends Component {
+const token =
+  "pk.eyJ1IjoibWlsaW5iaGFrdGEiLCJhIjoiY2s3bXRvMzJlMDcyMTNrcTg2ZWI5ODRlaSJ9.lJhVMW_A65jIeG_oFINQoA";
+
+const navStyle = {
+    float:"right",
+    top: 0,
+    left: 0,
+    padding: '5px',
+    margin:`5px`
+  };
+
+class Map extends Component {
   constructor(props) {
     super(props);
     this.state = {
       viewport: {
-        latitude: 43.708805,
-        longitude: -79.48043,
-        zoom: 16,
+        latitude: 37.785164,
+        longitude: -100,
+        zoom: 3,
         bearing: 0,
-        pitch: 0,
-        width: "100%",
-        height: "100%"
+        pitch: 0
       },
-      popupInfo: null
+      searchResultLayer: null,
+      marker: {
+        latitude: 37.785164,
+        longitude: -100
+      },
+      events: {}
     };
+
+    this.handleViewportChange = this.handleViewportChange.bind(this);
+    this.handleGeocoderViewportChange = this.handleGeocoderViewportChange.bind(
+      this
+    );
+    this.handleOnResult = this.handleOnResult.bind(this);
+    this._onMarkerDragStart = this._onMarkerDragStart.bind(this);
+    this._onMarkerDrag = this._onMarkerDrag.bind(this);
+    this._onMarkerDragEnd = this._onMarkerDragEnd.bind(this);
+  }
+  mapRef = React.createRef();
+
+  handleViewportChange(viewport) {
+    this.setState({
+      viewport: { ...this.state.viewport, ...viewport }
+    });
+  }
+  // if you are happy with Geocoder default settings, you can just use handleViewportChange directly
+  handleGeocoderViewportChange(viewport) {
+    const geocoderDefaultOverrides = { transitionDuration: 1000 };
+    console.log("ViewPort",viewport);
+    this.setState({marker:{latitude:viewport.latitude,longitude:viewport.longitude}})
+    this.props.onSave(this.state.marker);
+    return this.handleViewportChange({
+      ...viewport,
+      ...geocoderDefaultOverrides
+    });
   }
 
-  // showDetails=() => {
-  // this.setState({popupInfo: true});
-  // }
+  handleOnResult(event) {
+    this.setState({
+      searchResultLayer: new GeoJsonLayer({
+        id: "search-result",
+        data: event.result.geometry,
+        getFillColor: [255, 0, 0, 128],
+        getRadius: 1000,
+        pointRadiusMinPixels: 10,
+        pointRadiusMaxPixels: 10
+      })
+    });
+  }
+  _updateViewport = viewport => {
+    this.setState({ viewport });
+  };
 
-  // hideDetails= ()=> {
-  // this.setState({popupInfo: null});
-  // }
+  _logDragEvent(name, event) {
+    this.setState({
+      events: {
+        ...this.state.events,
+        [name]: event.lngLat
+      }
+    });
+  }
 
-  // renderPopup(index) {
-  //   return (
-  //     this.state.popupInfo && (
-  //       <Popup
-  //         tipSize={5}
-  //         anchor="bottom-right"
-  //         longitude={markerList[index].long}
-  //         latitude={markerList[index].lat}
-  //         onMouseLeave={() => this.setState({ popupInfo: null })}
-  //         closeOnClick={true}
-  //       >
-  //         <p>Available beds:{markerList[index].info}</p>
-  //       </Popup>
-  //     )
-  //   );
-  // }
+  _onMarkerDragStart = event => {
+    this._logDragEvent("onDragStart", event);
+  };
+
+  _onMarkerDrag = event => {
+    this._logDragEvent("onDrag", event);
+  };
+
+  _onMarkerDragEnd = event => {
+    this._logDragEvent("onDragEnd", event);
+    this.setState({
+      marker: {
+        longitude: event.lngLat[0],
+        latitude: event.lngLat[1]
+      }
+    });
+  };
 
   render() {
-    const { viewport } = this.state;
+    const { viewport, marker } = this.state;
     return (
-      <div style={{ height: "100%", width: "100%" }}>
+      <div style={{ height: "600px", width: "600px", margin: "50px" }}>
         <MapGL
+          ref={this.mapRef}
           {...viewport}
-          onViewportChange={viewport => this.setState({ viewport })}
           mapStyle="mapbox://styles/mapbox/dark-v9"
-          mapboxApiAccessToken={TOKEN}
+          onViewportChange={this.handleViewportChange}
+          mapboxApiAccessToken={token}
+          height="inherit"
+          width="inherit"
         >
+          {" "}
+          <Marker
+            longitude={marker.longitude}
+            latitude={marker.latitude}
+            offsetTop={-5}
+            offsetLeft={-5}
+            draggable
+            onDragStart={this._onMarkerDragStart}
+            onDrag={this._onMarkerDrag}
+            onDragEnd={this._onMarkerDragEnd}
+          >
+            <Pin size={20} />
+          </Marker>{" "}
+          />
+         
           <div className="nav" style={navStyle}>
-            <NavigationControl
-              onViewportChange={viewport => this.setState({ viewport })}
-            />
-            <div>
-              {" "}
-              <Marker
-                longitude={-79.48043}
-                latitude={43.708805}
-              >
-                <LocationOnIcon name="Current Location" size="big" />
-              </Marker>{" "}
-              {/* {this.renderPopup(index)} */}
-            </div>
-
-            {/* {markerList.map((marker, index) => {
-              return (
-                <div key={index}>
-                  {" "}
-                  <Marker longitude={marker.long} latitude={marker.lat}>
-                    <LocationOnIcon
-                      name="hospital"
-                      size="big"
-                      onMouseEnter={() => this.setState({ popupInfo: true })}
-                      onMouseLeave={() => this.setState({ popupInfo: null })}
-                    />
-                  </Marker>{" "}
-                  {this.renderPopup(index)}
-                </div>
-              );
-            })} */}
+            <GeolocateControl
+            style={{marginBottom:`5px`}}
+            positionOptions={{ enableHighAccuracy: true }}
+            trackUserLocation={true}
+          />
+          <NavigationControl onViewportChange={this._updateViewport} />
           </div>
+          <Geocoder
+            mapRef={this.mapRef}
+            onResult={this.handleOnResult}
+            onViewportChange={this.handleGeocoderViewportChange}
+            mapboxApiAccessToken={token}
+            position="top-left"
+          />
         </MapGL>
+        {/* <DeckGL {...viewport} layers={[searchResultLayer]} /> */}
       </div>
     );
   }
 }
+
+export default Map;

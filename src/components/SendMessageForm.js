@@ -24,7 +24,8 @@ class SendMessageForm extends Component {
       anchorEl: null,
       open: false,
       files: [],
-      openLocation: false
+      openLocation: false,
+      marker:{}
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
@@ -74,8 +75,11 @@ class SendMessageForm extends Component {
     this.setState({ openLocation: true });
   };
 
-  handleLocationClose = () => {
-    this.setState({ openLocation: false });
+  handleLocationClose = (marker) => {
+    this.setState({ openLocation: false, marker });
+    console.log("marker in send form",marker);
+    this.props.onSendLocation(marker);
+    this.setState({ text: "" });
     this.handleClose();
   };
 
