@@ -29,6 +29,7 @@ export default class MapSelector extends Component {
       },
     };
     this.handleClose = this.handleClose.bind(this);
+    this.handleClosebtn = this.handleClosebtn.bind(this);
     this.handleSave = this.handleSave.bind(this);
   }
 
@@ -36,6 +37,10 @@ export default class MapSelector extends Component {
   handleClose = () => {
     this.props.onClose(this.state.marker);
   };
+
+  handleClosebtn = () =>{
+    this.props.onClose(null)
+  }
 
   handleSave(marker){
     this.setState({marker});
@@ -68,7 +73,7 @@ export default class MapSelector extends Component {
         <Dialog
           fullScreen
           open={this.props.open}
-          onClose={this.handleClose}
+          onClose={this.handleClosebtn}
           TransitionComponent={Transition}
         >
           <AppBar style={classes.appBarLocation}>
@@ -76,7 +81,7 @@ export default class MapSelector extends Component {
               <IconButton
                 edge="start"
                 color="inherit"
-                onClick={this.handleClose}
+                onClick={this.handleClosebtn}
                 aria-label="close"
               >
                 <CloseIcon />

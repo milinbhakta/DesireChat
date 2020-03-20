@@ -72,11 +72,11 @@ class ChatScreen extends Component {
   }
 
   sendLocation(marker){
-    console.log("Marker in Send Location Method",marker);
     if(Object.keys(marker).length === 0 && marker.constructor === Object){
       return;
     }
-    const marstring = `Marker:{latitude:${marker.latitude.toString()},longitude:${marker.longitude.toString()}}`;
+    let location = {longitude:marker.longitude,latitude:marker.latitude}
+    const marstring = JSON.stringify(location);
     if (marstring.trim() === "") return;
     const parts = [];
     if (marstring.trim() !== "") {

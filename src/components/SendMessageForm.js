@@ -25,8 +25,8 @@ class SendMessageForm extends Component {
       open: false,
       files: [],
       openLocation: false,
-      marker:{},
-      openFile:false
+      marker: {},
+      openFile: false
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
@@ -39,7 +39,7 @@ class SendMessageForm extends Component {
     this.handleSaveImage = this.handleSaveImage.bind(this);
     this.handleImageOpen = this.handleImageOpen.bind(this);
     this.handleFileOpen = this.handleFileOpen.bind(this);
-    this.handleSaveFile =this.handleSaveFile.bind(this);
+    this.handleSaveFile = this.handleSaveFile.bind(this);
   }
 
   componentDidMount() {}
@@ -79,12 +79,18 @@ class SendMessageForm extends Component {
     this.setState({ openLocation: true });
   };
 
-  handleLocationClose = (marker) => {
-    this.setState({ openLocation: false, marker });
-    console.log("marker in send form",marker);
-    this.props.onSendLocation(marker);
-    this.setState({ text: "" });
-    this.handleClose();
+  handleLocationClose = marker => {
+    if (marker) {
+      this.setState({ openLocation: false, marker });
+      console.log("marker in send form", marker);
+      this.props.onSendLocation(marker);
+      this.setState({ text: "" });
+      this.handleClose();
+    }
+    else{
+      this.setState({ openLocation: false });
+      this.handleClose();
+    }
   };
 
   handleSaveImage = files => {
@@ -192,7 +198,7 @@ class SendMessageForm extends Component {
         <DropzoneDialog
           open={this.state.openFile}
           onSave={this.handleSaveFile}
-          acceptedFiles={['.pdf', 'audio/*','video/*']}
+          acceptedFiles={[".pdf", "audio/*", "video/*"]}
           showPreviews={true}
           maxFileSize={5000000}
           onClose={this.handleClose}

@@ -4,6 +4,7 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import "./MessagesList.css";
 import { Typography } from "@material-ui/core";
+import MapList from "./Map-ListItem";
 
 class MessagesList extends Component {
   componentDidUpdate() {
@@ -24,17 +25,37 @@ class MessagesList extends Component {
       var timeString = date.toLocaleString("en-US", options);
 
       if (message.parts[0].partType === "inline") {
-        return (
-          <ListItem ref={ref => (this.newData = ref)} key={index}>
-            <ListItemText
-              primary={message.senderId}
-              secondary={message.parts[0].payload.content}
-            />
-            <Typography variant="caption" display="block" gutterBottom>
-              {timeString}
-            </Typography>
-          </ListItem>
-        );
+        if (message.parts[0].payload.content.indexOf('{') === 0) {
+          console.log("in marker");
+          return (
+            <ListItem ref={ref => (this.newData = ref)} key={index}>
+              <ListItemText
+                primary={message.senderId}
+                // secondary={message.parts[0].payload.content}
+                secondary={
+                  <MapList
+                    Marker={JSON.parse(message.parts[0].payload.content)}
+                  />
+                }
+              />
+              <Typography variant="caption" display="block" gutterBottom>
+                {timeString}
+              </Typography>
+            </ListItem>
+          );
+        } else {
+          return (
+            <ListItem ref={ref => (this.newData = ref)} key={index}>
+              <ListItemText
+                primary={message.senderId}
+                secondary={message.parts[0].payload.content}
+              />
+              <Typography variant="caption" display="block" gutterBottom>
+                {timeString}
+              </Typography>
+            </ListItem>
+          );
+        }
       } else if (message.parts[0].partType === undefined) {
         console.log("Message Undefined", message);
         return (
@@ -66,7 +87,10 @@ class MessagesList extends Component {
               <ListItemText
                 primary={
                   <React.Fragment>
-                    <a href={message.parts[0].payload._downloadURL} target="_blank">
+                    <a
+                      href={message.parts[0].payload._downloadURL}
+                      target="_blank"
+                    >
                       <img
                         src={message.parts[0].payload._downloadURL}
                         alt={message.parts[0].payload.name}
@@ -85,7 +109,7 @@ class MessagesList extends Component {
               </Typography>
             </ListItem>
           );
-        } else if (message.parts[0].payload.type.match('application/pdf')) {
+        } else if (message.parts[0].payload.type.match("application/pdf")) {
           return (
             <ListItem
               ref={ref => (this.newData = ref)}
@@ -99,7 +123,10 @@ class MessagesList extends Component {
               <ListItemText
                 primary={
                   <React.Fragment>
-                    <a href={message.parts[0].payload._downloadURL} target="_blank">
+                    <a
+                      href={message.parts[0].payload._downloadURL}
+                      target="_blank"
+                    >
                       <img
                         src={message.parts[0].payload._downloadURL}
                         alt={message.parts[0].payload.name}
