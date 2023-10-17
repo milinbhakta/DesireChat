@@ -4,50 +4,116 @@ import MessageList from "./components/MessageList";
 import SendMessageForm from "./components/SendMessageForm";
 import TypingIndicator from "./components/TypingIndicator";
 import WhosOnlineList from "./components/WhosOnlineList";
-import { Grid } from "@material-ui/core";
+import { Grid, Divider, Typography } from "@material-ui/core";
 import SimpleBackdrop from "./components/SimpleBackdrop";
-
+import MenuAppBar from "./components/MenuAppBar";
+import RoomsList from "./components/RoomsList";
 class ChatScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      ready: false,
       currentUser: {},
       currentRoom: {},
       messages: [],
       usersWhoAreTyping: [],
       name: "",
-      roomname: ""
+      joinableRooms: [],
+      rooms: [],
+      avatarUrl: undefined
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendTypingEvent = this.sendTypingEvent.bind(this);
     this.createRoom = this.createRoom.bind(this);
+    this.getJoinableRooms = this.getJoinableRooms.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
+    this.subscribeToRoomMultipart = this.subscribeToRoomMultipart.bind(this);
+    this.sendFile = this.sendFile.bind(this);
+    this.OnAvatarChange = this.OnAvatarChange.bind(this);
+    this.sendLocation = this.sendLocation.bind(this);
   }
-
+  // Send the Typing Events
   sendTypingEvent() {
     this.state.currentUser
       .isTypingIn({ roomId: this.state.currentRoom.id })
       .catch(error => console.error("error", error));
   }
+  // send messages
   sendMessage(text) {
-    this.state.currentUser.sendMessage({
-      text,
-      roomId: this.state.currentRoom.id
+    console.log(text);
+    if (text.trim() === "") return;
+    const parts = [];
+    if (text.trim() !== "") {
+      parts.push({
+        type: "text/plain",
+        content: text
+      });
+    }
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
     });
   }
 
+  
+
+  sendFile(files) {
+    if (files.length === 0) return;
+    const parts = [];
+    files.forEach(pic => {
+      parts.push({
+        file: pic
+      });
+    });
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
+    });
+  }
+
+  sendLocation(marker){
+    if(Object.keys(marker).length === 0 && marker.constructor === Object){
+      return;
+    }
+    let location = {longitude:marker.longitude,latitude:marker.latitude}
+    const marstring = JSON.stringify(location);
+    if (marstring.trim() === "") return;
+    const parts = [];
+    if (marstring.trim() !== "") {
+      parts.push({
+        type: "text/plain",
+        content: marstring
+      });
+    }
+    this.state.currentUser.sendMultipartMessage({
+      roomId: `${this.state.currentRoom.id}`,
+      parts
+    });
+  }
+
+  getRooms() {
+    this.state.currentUser
+      .getJoinableRooms()
+      .then(joinableRooms => {
+        this.setState({
+          joinableRooms,
+          rooms: this.state.currentUser.rooms
+        });
+      })
+      .catch(err => console.log("error on joinableRooms: ", err));
+  }
+  //create room
   createRoom(name) {
     this.state.currentUser
       .createRoom({
         id: `#${name}`,
         name: name,
-        private: true
+        private: false
       })
       .then(room => {
-        console.log(`room created with name ${room.name}`);
+        this.subscribeToRoomMultipart(room.id);
       })
-      .catch(err => {
-        console.log(`Error creating room ${err}`);
-      });
+      .catch(err => console.log("error with createRoom: ", err));
   }
 
   onChange(e) {
@@ -57,49 +123,99 @@ class ChatScreen extends Component {
     }
   }
 
+  getJoinableRooms(id) {
+    this.state.currentUser
+      .getJoinableRooms({
+        userId: id
+      })
+      .then(rooms => {
+        let joinrooms = [];
+        rooms.map(room => {
+          joinrooms.push({
+            id: room.id,
+            name: room.name,
+            createdByUserId: room.createdByUserId
+          });
+          return joinrooms;
+        });
+        this.setState({ joinableRooms: joinrooms });
+        console.log(joinrooms);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
+  joinRoom(roomId) {
+    this.state.currentUser
+      .joinRoom({ roomId: roomId })
+      .then(room => {
+        console.log(`Joined room with ID: ${room.id}`);
+        this.subscribeToRoomMultipart(room.id);
+      })
+      .catch(err => {
+        console.log(`Error joining room ${roomId}: ${err}`);
+      });
+  }
+
+  subscribeToRoomMultipart(roomId) {
+    console.log("Subscribed Room Id", roomId);
+    this.setState({ messages: [] });
+    this.state.currentUser
+      .subscribeToRoomMultipart({
+        roomId: roomId,
+        messageLimit: 100,
+        hooks: {
+          onMessage: message => {
+            this.setState({ messages: [...this.state.messages, message] });
+          },
+          onUserStartedTyping: user => {
+            this.setState({
+              usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
+            });
+          },
+          onUserStoppedTyping: user => {
+            this.setState({
+              usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
+                username => username !== user.name
+              )
+            });
+          },
+          onPresenceChanged: () => this.forceUpdate()
+        }
+      })
+      .then(currentRoom => {
+        console.log(currentRoom);
+        this.setState({ currentRoom });
+      })
+      .catch(err => console.log("error on subscribing to room: ", err));
+  }
+
+  OnAvatarChange(avatarUrl){
+    this.setState({avatarUrl:avatarUrl});
+  }
+
   componentDidMount() {
     const chatManager = new Chatkit.ChatManager({
-      instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
+      instanceLocator: "v1:us1:a53c6f61-2e05-403e-8bdc-699a9c55de4b",
       userId: this.props.currentUsername,
       tokenProvider: new Chatkit.TokenProvider({
         url: "http://localhost:3001/authenticate"
       })
     });
-
     chatManager
       .connect()
       .then(currentUser => {
-        this.setState({ currentUser });
-        console.log("User", currentUser);
-        return currentUser.subscribeToRoom({
-          roomId: "d5e60275-05f7-47de-a634-e4af9c79c526",
-          messageLimit: 100,
-          hooks: {
-            onMessage: message => {
-              this.setState({
-                messages: [...this.state.messages, message]
-              });
-            },
-            onUserStartedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: [...this.state.usersWhoAreTyping, user.name]
-              });
-            },
-            onUserStoppedTyping: user => {
-              this.setState({
-                usersWhoAreTyping: this.state.usersWhoAreTyping.filter(
-                  username => username !== user.name
-                )
-              });
-            },
-            onPresenceChange: () => this.forceUpdate()
-          }
+        this.setState({
+          currentUser,
+          rooms: currentUser.rooms,
+          avatarUrl: currentUser.avatarURL
         });
+        // console.log("Current User", currentUser);
+        this.getRooms();
+        this.subscribeToRoomMultipart(this.state.rooms[0].id);
       })
-      .then(currentRoom => {
-        this.setState({ currentRoom, roomname: currentRoom.name });
-      })
-      .catch(error => console.error("error", error));
+      .catch(error => console.error("Error", error));
   }
 
   render() {
@@ -113,8 +229,7 @@ class ChatScreen extends Component {
         flex: 1
       },
       whosOnlineListContainer: {
-        backgroundColor: "#2c303b",
-        Color: "white"
+        // borderRight: "solid"
       },
       chatListContainer: {
         padding: 20,
@@ -154,27 +269,53 @@ class ChatScreen extends Component {
       },
       input: {
         Color: "white"
+      },
+      listtitle: {
+        padding: "10px"
       }
     };
-
     return (
       <div className={styles.root}>
         <SimpleBackdrop />
+        <MenuAppBar
+          onSubmit={this.createRoom}
+          currentUser={this.state.currentUser}
+          currentRoom={this.state.currentRoom}
+          joinableRooms={this.state.joinableRooms}
+          avatarUrl={this.state.avatarUrl}
+          OnAvatarChange = {this.OnAvatarChange}
+        />
         <Grid container className={styles.gridList} spacing={3}>
           <Grid item xs={3} style={styles.whosOnlineListContainer}>
             <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Room Member
+              </Typography>
               <WhosOnlineList
                 currentUser={this.state.currentUser}
                 users={this.state.currentRoom.users}
+                avatarUrl={this.state.avatarUrl}
               />
             </Grid>
-            {/* <Grid item xs>
-              <CreateRoomForm onSubmit={this.createRoom} />
-            </Grid> */}
+            <Divider style={{ backgroundColor: "#cfd8dc" }} />
+            <Grid item xs>
+              <Typography variant="h6" gutterBottom style={styles.listtitle}>
+                Your Rooms
+              </Typography>
+              <RoomsList
+                currentUser={this.state.currentUser}
+                currentRoom={this.state.currentRoom}
+                selectedRoom={this.state.currentRoom.id}
+                rooms={this.state.rooms}
+                onJoin={this.joinRoom}
+              />
+            </Grid>
           </Grid>
+          <Divider orientation="vertical" flexItem />
           <Grid item xs>
             <Grid item xs>
               <MessageList
+                currentRoom={this.state.currentRoom}
                 messages={this.state.messages}
                 style={styles.chatList}
               />
@@ -186,6 +327,8 @@ class ChatScreen extends Component {
               <SendMessageForm
                 onSubmit={this.sendMessage}
                 onChange={this.sendTypingEvent}
+                onFileSubmit={this.sendFile}
+                onSendLocation = {this.sendLocation}
               />
             </Grid>
           </Grid>

@@ -1,18 +1,48 @@
 import React, { Component } from "react";
+import MapSelector from "./MapSelector";
 import "./SendMessageForm.css";
-import { FilledInput, Grid } from "@material-ui/core";
+import {
+  FilledInput,
+  Grid,
+  createMuiTheme,
+  Menu,
+  MenuItem
+} from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Send from "@material-ui/icons/Send";
+import AddIcon from "@material-ui/icons/Add";
+import ImageIcon from "@material-ui/icons/Image";
+import AttachFileIcon from "@material-ui/icons/AttachFile";
+import LocationOnIcon from "@material-ui/icons/LocationOn";
+import { DropzoneDialog } from "material-ui-dropzone";
 
 class SendMessageForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: ""
+      text: "",
+      anchorEl: null,
+      open: false,
+      files: [],
+      openLocation: false,
+      marker: {},
+      openFile: false
     };
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+    this.handleImageClick = this.handleImageClick.bind(this);
+    this.handleFileClick = this.handleFileClick.bind(this);
+    this.handleLocationOpen = this.handleLocationOpen.bind(this);
+    this.handleLocationClose = this.handleLocationClose.bind(this);
+    this.handleSaveImage = this.handleSaveImage.bind(this);
+    this.handleImageOpen = this.handleImageOpen.bind(this);
+    this.handleFileOpen = this.handleFileOpen.bind(this);
+    this.handleSaveFile = this.handleSaveFile.bind(this);
   }
+
+  componentDidMount() {}
 
   onSubmit(e) {
     e.preventDefault();
@@ -27,7 +57,74 @@ class SendMessageForm extends Component {
     }
   }
 
+  handleClick = event => {
+    this.setState({ anchorEl: event.currentTarget });
+  };
+
+  handleClose = () => {
+    this.setState({ anchorEl: null, open: false });
+  };
+
+  handleImageClick = () => {
+    this.handleImageOpen();
+    this.handleClose();
+  };
+
+  handleFileClick = () => {
+    this.handleFileOpen();
+    this.handleClose();
+  };
+
+  handleLocationOpen = () => {
+    this.setState({ openLocation: true });
+  };
+
+  handleLocationClose = marker => {
+    if (marker) {
+      this.setState({ openLocation: false, marker });
+      console.log("marker in send form", marker);
+      this.props.onSendLocation(marker);
+      this.setState({ text: "" });
+      this.handleClose();
+    }
+    else{
+      this.setState({ openLocation: false });
+      this.handleClose();
+    }
+  };
+
+  handleSaveImage = files => {
+    this.setState({
+      files: files,
+      open: false
+    });
+    console.log(files);
+    this.props.onFileSubmit(files);
+  };
+
+  handleSaveFile = files => {
+    this.setState({
+      files: files,
+      openFile: false
+    });
+    console.log(files);
+    this.props.onFileSubmit(files);
+  };
+
+  handleImageOpen() {
+    this.setState({
+      open: true
+    });
+  }
+
+  handleFileOpen() {
+    this.setState({
+      openFile: true
+    });
+  }
+
   render() {
+    const theme = createMuiTheme();
     const styles = {
       root: {
         flexGrow: 1
@@ -38,11 +135,22 @@ class SendMessageForm extends Component {
       },
       btn: {
         marginTop: "10px"
+      },
+      plus: {},
+      paper: {
+        marginRight: theme.spacing(2)
       }
     };
     return (
       <form onSubmit={this.onSubmit}>
         <Grid item xs style={styles.inputmessage}>
+          <Button
+            aria-controls="simple-menu"
+            aria-haspopup="true"
+            onClick={this.handleClick}
+          >
+            <AddIcon />
+          </Button>
           <FilledInput
             className="input"
             type="text"
@@ -61,39 +169,46 @@ class SendMessageForm extends Component {
             </Button>
           </Grid>
         </Grid>
+        <Menu
+          id="simple-menu"
+          anchorEl={this.state.anchorEl}
+          keepMounted
+          open={Boolean(this.state.anchorEl)}
+          onClose={this.handleClose}
+          transitionDuration={343}
+        >
+          <MenuItem onClick={this.handleImageOpen}>
+            <ImageIcon /> Image
+          </MenuItem>
+          <MenuItem onClick={this.handleFileClick}>
+            <AttachFileIcon /> File
+          </MenuItem>
+          <MenuItem onClick={this.handleLocationOpen}>
+            <LocationOnIcon /> Location
+          </MenuItem>
+        </Menu>
+        <DropzoneDialog
+          open={this.state.open}
+          onSave={this.handleSaveImage}
+          acceptedFiles={["image/jpeg", "image/png", "image/bmp"]}
+          showPreviews={true}
+          maxFileSize={5000000}
+          onClose={this.handleClose}
+        />
+        <DropzoneDialog
+          open={this.state.openFile}
+          onSave={this.handleSaveFile}
+          acceptedFiles={[".pdf", "audio/*", "video/*"]}
+          showPreviews={true}
+          maxFileSize={5000000}
+          onClose={this.handleClose}
+        />
+
+        <MapSelector
+          open={this.state.openLocation}
+          onClose={this.handleLocationClose}
+        />
       </form>
-      // <React.Fragment>
-      //   <CssBaseline />
-      //   <Container maxWidth="lg">
-      //     <form onSubmit={this.onSubmit}>
-      //       <Table>
-      //         <TableBody>
-      //           <TableRow>
-      //             <TableCell>
-      //               <FilledInput
-      //                 className="input"
-      //                 type="text"
-      //                 placeholder="Type a message here then hit ENTER"
-      //                 onChange={this.onChange}
-      //                 value={this.state.text}
-      //               />
-      //             </TableCell>
-      //             <TableCell>
-      //               <Button
-      //                 variant="contained"
-      //                 color="primary"
-      //                 endIcon={<Send />}
-      //                 onClick={this.onSubmit}
-      //               >
-      //                 Send
-      //               </Button>
-      //             </TableCell>
-      //           </TableRow>
-      //         </TableBody>
-      //       </Table>
-      //     </form>
-      //   </Container>
-      // </React.Fragment>
     );
   }
 }

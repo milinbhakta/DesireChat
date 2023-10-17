@@ -2,18 +2,20 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const Chatkit = require("@pusher/chatkit-server");
+const path = require("path");
 
 const app = express();
 
 const chatkit = new Chatkit.default({
-  instanceLocator: "v1:us1:5c3dad01-866a-4f5e-8983-8b02af87d5bd",
+  instanceLocator: "v1:us1:a53c6f61-2e05-403e-8bdc-699a9c55de4b",
   key:
-    "68e944ac-dd77-4287-985f-a9b39ec1e6da:7atZLuBNNObzPWE+bvBRWStuQJ4JMM9rjqEw6uAWoFg="
+    "ad5c0955-7832-4bd8-9130-2faa6aa95eb4:nTt1/t1xUKtP24njCJRp38ZwasuHoroV4WGZ0iAzX1I="
 });
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+app.use("/public", express.static(path.resolve(__dirname, "public")));
 
 app.post("/users", (req, res) => {
   const { username } = req.body;
@@ -29,6 +31,21 @@ app.post("/users", (req, res) => {
       } else {
         res.status(error.status).json(error);
       }
+    });
+});
+
+app.post("/updateuser", (req, res) => {
+  const { userId, AvatarUrl } = req.body;
+  chatkit
+    .updateUser({
+      id: userId,
+      avatarURL: AvatarUrl
+    })
+    .then(() => {
+      res.sendStatus(201);
+    })
+    .catch(error => {
+      res.status(error.status).json(error);
     });
 });
 
